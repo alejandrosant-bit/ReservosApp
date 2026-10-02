@@ -1,16 +1,15 @@
 // ============================================================
 // Proyecto de Firebase de Reservo: reservoapp-d0cca (independiente de Prestahelp).
-// Configuración de Firebase — REEMPLAZA estos valores por los de
-// tu proyecto (Firebase Console → Configuración del proyecto →
-// Tus apps → Web). Ver README.md, paso 1.
+// Valores de Firebase Console → Configuración del proyecto → Tus apps → Web.
 // ============================================================
 export const firebaseConfig = {
-  apiKey: "TU_API_KEY",
+  apiKey: "AIzaSyB8TdEbOe2RFntDB2dZxk8Oq-4iQTcpqlQ",
   authDomain: "reservoapp-d0cca.firebaseapp.com",
   projectId: "reservoapp-d0cca",
   storageBucket: "reservoapp-d0cca.firebasestorage.app",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:0000000000000000",
+  messagingSenderId: "1098645439832",
+  appId: "1:1098645439832:web:affb63c98058ed3dc5512d",
+  measurementId: "G-YZW4Y21GJ0",
 };
 
 // Clave para notificaciones push (Firebase Console → Configuración
