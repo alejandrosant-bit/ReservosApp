@@ -1,4 +1,4 @@
-# Sitio de Netlify propio de Agenda Spa (independiente de Prestahelp).
+# Sitio de Netlify propio de Reservo (independiente de Prestahelp).
 [build]
   publish = "public"
   functions = "netlify/functions"

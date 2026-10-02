@@ -1,5 +1,5 @@
 // ============================================================
-// Agenda Spa — arranque, sesión, navegación y avisos
+// Reservo — arranque, sesión, navegación y avisos
 // ============================================================
 import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, actualizar } from "./datos.js";
 import { permitirRegistro } from "./firebase-config.js";
@@ -119,9 +119,9 @@ function aplicarMarca() {
   const c = E.config;
   document.documentElement.style.setProperty("--pri", c.colorPrimario || "#c2185b");
   $('meta[name="theme-color"]').setAttribute("content", c.colorPrimario || "#c2185b");
-  $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Agenda Spa"));
+  $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Reservo"));
   $$("[data-logo]").forEach((el) => (el.src = c.logo || "./icon-192.png"));
-  document.title = c.nombre || "Agenda Spa";
+  document.title = c.nombre || "Reservo";
   try {
     localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, logo: c.logo }));
   } catch {}

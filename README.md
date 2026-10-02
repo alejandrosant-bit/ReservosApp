@@ -1,4 +1,4 @@
-# Agenda Spa 💆‍♀️💇‍♂️
+# Reservo 💆‍♀️💇‍♂️
 
 Software para **spa, peluquería, barbería y uñas**: agenda de citas, bot de
 WhatsApp que agenda y cancela solo, base de datos de clientes, caja con
@@ -57,7 +57,7 @@ extrañamos” automáticos, y lista de espera.
 ### 1. Firebase (base de datos)
 
 1. Entra a <https://console.firebase.google.com> → **Agregar proyecto** →
-   crea un proyecto **NUEVO** solo para esta app, p. ej. `agenda-spa`.
+   crea un proyecto **NUEVO** solo para esta app, p. ej. `reservo`.
    ⚠️ No uses el proyecto de Prestahelp: son apps distintas y cada una
    tiene su propia base de datos.
 2. **Authentication** → Comenzar → activa **Correo electrónico/contraseña**.
@@ -81,7 +81,7 @@ extrañamos” automáticos, y lista de espera.
 ### 2. Netlify (hosting + bot)
 
 1. En Netlify: **Add new site → Import from Git** → elige el repositorio
-   de GitHub **de esta app** (`agenda-spa`, separado de Prestahelp). Es un
+   de GitHub **de esta app** (`reservo`, separado de Prestahelp). Es un
    sitio de Netlify nuevo, distinto al de Prestahelp.
 2. No hace falta configurar nada más del build: todo lo toma de `netlify.toml`.
 3. **Site configuration → Environment variables**, agrega:

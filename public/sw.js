@@ -7,7 +7,7 @@
 //    3:00 pm") aunque la app esté cerrada.
 // Al cambiar cualquier archivo, sube el número de VERSION.
 // ============================================================
-const VERSION = "agenda-spa-v1";
+const VERSION = "reservo-v1";
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 const ARCHIVOS = [
   "./",
@@ -107,7 +107,7 @@ self.addEventListener("push", (event) => {
   try {
     p = event.data ? event.data.json() : {};
   } catch {
-    p = { data: { titulo: "Agenda", cuerpo: event.data?.text() || "" } };
+    p = { data: { titulo: "Reservo", cuerpo: event.data?.text() || "" } };
   }
   const d = p.data || p.notification || {};
   const titulo = d.titulo || d.title || "🔔 Nueva cita";

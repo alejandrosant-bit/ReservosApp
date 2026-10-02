@@ -1,5 +1,5 @@
 // ============================================================
-// Agenda Spa — lógica compartida (sin dependencias)
+// Reservo — lógica compartida (sin dependencias)
 // La usan tanto la app del navegador como el bot de WhatsApp
 // (Netlify Functions), así los cupos que ve el dueño en el
 // calendario y los que ofrece el bot salen del MISMO cálculo.

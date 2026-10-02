@@ -1,6 +1,6 @@
 {
-  "name": "Agenda Spa — citas, clientes y caja",
-  "short_name": "Agenda",
+  "name": "Reservo — citas, clientes y caja",
+  "short_name": "Reservo",
   "description": "Agenda de citas con bot de WhatsApp, base de clientes y caja para spa, peluquería y barbería.",
   "start_url": "./#agenda",
   "scope": "./",
