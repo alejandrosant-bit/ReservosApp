@@ -1,0 +1,17 @@
+{
+  "name": "agenda-spa",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agenda, caja y bot de WhatsApp para spas, peluquerías y barberías",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

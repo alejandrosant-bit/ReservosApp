@@ -1,0 +1,28 @@
+# Sitio de Netlify propio de Agenda Spa (independiente de Prestahelp).
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm test"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["firebase-admin"]
+
+# El service worker y el index nunca deben quedar en caché del
+# navegador/CDN, para que las actualizaciones lleguen enseguida.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

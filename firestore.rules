@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// ============================================================
+// Reglas de seguridad (Firestore → Reglas → pegar → Publicar)
+// Cada negocio = una cuenta. El id del negocio es el uid del
+// dueño, así nadie puede ver ni tocar los datos de otro negocio.
+// El bot de WhatsApp (Netlify Functions) usa una cuenta de
+// servicio de administrador, que no pasa por estas reglas.
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esDueno(negocioId) {
+      return request.auth != null && request.auth.uid == negocioId;
+    }
+
+    match /negocios/{negocioId} {
+      allow read, write: if esDueno(negocioId);
+
+      // Datos del negocio (servicios, clientes, citas, caja, etc.)
+      match /{coleccion}/{docId} {
+        allow read, write: if esDueno(negocioId)
+          && coleccion in ['servicios', 'profesionales', 'clientes', 'citas', 'movimientos', 'cajas', 'avisos', 'dispositivos', 'conversaciones', 'privado'];
+      }
+
+      // Registro interno del bot para no responder dos veces
+      match /mensajesProcesados/{id} {
+        allow read, write: if false;
+      }
+    }
+
+    // Qué número de WhatsApp Business pertenece a qué negocio
+    match /whatsappNumeros/{phoneNumberId} {
+      allow read: if request.auth != null && resource.data.negocioId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.negocioId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.negocioId == request.auth.uid
+        && request.resource.data.negocioId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.negocioId == request.auth.uid;
+    }
+  }
+}

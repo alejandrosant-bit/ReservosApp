@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Agenda Spa</title>
+<meta name="description" content="Agenda de citas, caja y clientes para spa, peluquería y barbería, con bot de WhatsApp." />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" href="./icon-192.png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="theme-color" content="#c2185b" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<!-- ===================== CARGANDO ===================== -->
+<div id="vista-cargando" class="pantalla-centro">
+  <div class="spinner"></div>
+</div>
+
+<!-- ===================== SIN CONFIGURAR ===================== -->
+<div id="vista-sin-config" class="pantalla-centro oculto">
+  <div class="tarjeta-login">
+    <h1>Falta configurar Firebase</h1>
+    <p>Abre <code>public/firebase-config.js</code> y pega la configuración de tu proyecto de Firebase. Las instrucciones paso a paso están en el <code>README.md</code>.</p>
+  </div>
+</div>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="vista-login" class="pantalla-centro oculto">
+  <div class="tarjeta-login">
+    <img src="./icon-192.png" alt="" class="logo-login" id="login-logo" />
+    <h1 id="login-titulo">Agenda Spa</h1>
+    <p class="sub">Citas · Clientes · Caja · Bot de WhatsApp</p>
+    <form id="form-login" autocomplete="on">
+      <label>Correo<input id="login-email" type="email" required autocomplete="username" /></label>
+      <label>Clave<input id="login-clave" type="password" required minlength="6" autocomplete="current-password" /></label>
+      <p id="login-error" class="error"></p>
+      <button type="submit" class="btn btn-pri btn-bloque" id="login-boton">Entrar</button>
+    </form>
+    <div class="login-links">
+      <button type="button" class="btn-link" id="login-olvido">¿Olvidaste tu clave?</button>
+      <button type="button" class="btn-link oculto" id="login-cambiar">¿No tienes cuenta? Crear una</button>
+    </div>
+    <p class="nota">La primera vez necesitas internet. Después la sesión queda guardada y la app funciona sin conexión.</p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="vista-app" class="oculto">
+  <aside class="menu-lateral">
+    <div class="marca">
+      <img src="./icon-192.png" alt="" class="logo-chico" data-logo />
+      <span data-nombre-negocio>Agenda Spa</span>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#agenda" data-tab="agenda"><span class="ico">📅</span><span>Agenda</span></a>
+      <a href="#clientes" data-tab="clientes"><span class="ico">👥</span><span>Clientes</span></a>
+      <a href="#caja" data-tab="caja"><span class="ico">💵</span><span>Caja</span></a>
+      <a href="#reportes" data-tab="reportes"><span class="ico">📊</span><span>Reportes</span></a>
+      <a href="#ajustes" data-tab="ajustes"><span class="ico">⚙️</span><span>Ajustes</span></a>
+    </nav>
+  </aside>
+
+  <div class="principal">
+    <header class="barra">
+      <div class="marca marca-movil">
+        <img src="./icon-192.png" alt="" class="logo-chico" data-logo />
+        <span data-nombre-negocio>Agenda Spa</span>
+      </div>
+      <div class="barra-der">
+        <button type="button" id="estado-sync" class="chip-sync" title="Estado de conexión"></button>
+        <button type="button" id="btn-avisos" class="btn-icono campana" aria-label="Avisos">🔔<span id="avisos-num" class="burbuja oculto"></span></button>
+      </div>
+    </header>
+    <main id="contenido"></main>
+  </div>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
