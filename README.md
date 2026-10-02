@@ -1,5 +1,7 @@
 # Reservo 💆‍♀️💇‍♂️
 
+**App publicada:** https://reservoapp.netlify.app · Firebase: `reservoapp-d0cca`
+
 Software para **spa, peluquería, barbería y uñas**: agenda de citas, bot de
 WhatsApp que agenda y cancela solo, base de datos de clientes, caja con
 apertura/cierre y arqueo, reportes semanales y mensuales, multimoneda
