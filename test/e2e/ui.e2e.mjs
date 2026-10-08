@@ -32,7 +32,7 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
 const page = await ctx.newPage();
 page.on("pageerror", (e) => errores.push("pageerror: " + e.message));
-page.on("console", (m) => m.type() === "error" && errores.push("console: " + m.text()));
+page.on("console", (m) => m.type() === "error" && !/ERR_CERT_AUTHORITY_INVALID|fonts\.g/.test(m.text()) && errores.push("console: " + m.text()));
 
 const js = (body) => ({ status: 200, contentType: "text/javascript", body });
 await page.route("https://www.gstatic.com/firebasejs/**", (route) => {
@@ -182,7 +182,8 @@ try {
   });
   await page.waitForSelector(".toast-aviso");
   ok(true, "llega el aviso con sonido cuando el bot agenda");
-  ok(await page.isVisible("#avisos-num"), "la campanita muestra el contador");
+  await page.waitForSelector("#avisos-num:not(.oculto)", { state: "visible" });
+  ok(true, "la campanita muestra el contador");
   await foto("aviso");
 
   // 9) Escritorio

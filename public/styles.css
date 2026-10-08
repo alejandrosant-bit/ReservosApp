@@ -307,3 +307,171 @@ tfoot td { font-weight: 800; border-top: 2px solid var(--borde); }
   main#contenido { padding: 0; }
   .tarjeta { box-shadow: none; border: 1px solid #ddd; }
 }
+
+/* ============================================================
+   Tema "cute" de Reservo
+   Concepto: salón rosado empolvado — superficies de algodón,
+   esquinas muy redondeadas, sombras rosadas suaves y botones que
+   rebotan al tocarlos. Animaciones cortas; se apagan si el
+   teléfono pide menos movimiento.
+   ============================================================ */
+:root {
+  --fondo: #fbf4f7;
+  --tarjeta: #ffffff;
+  --texto: #3b2333;
+  --suave: #8d7183;
+  --borde: #f1dfe8;
+  --pri-suave: color-mix(in srgb, var(--pri) 11%, #fff6fa);
+  --rosa-polvo: #ffe4ef;
+  --lila: #efe6ff;
+  --menta: #dcf7ec;
+  --durazno: #ffecdc;
+  --cielo: #e3f0ff;
+  --radio: 22px;
+  --sombra: 0 2px 6px color-mix(in srgb, var(--pri) 8%, transparent), 0 10px 28px color-mix(in srgb, var(--pri) 9%, transparent);
+  --sombra-alta: 0 6px 14px color-mix(in srgb, var(--pri) 14%, transparent), 0 18px 40px color-mix(in srgb, var(--pri) 14%, transparent);
+  --rebote: cubic-bezier(.34, 1.56, .64, 1);
+  --fuente: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fuente-titulo: "Fredoka", "Nunito", -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--fuente);
+  background:
+    radial-gradient(900px 500px at 100% -10%, color-mix(in srgb, var(--pri) 10%, transparent), transparent 70%),
+    radial-gradient(700px 420px at -10% 110%, #efe6ff, transparent 70%),
+    var(--fondo);
+  background-attachment: fixed;
+}
+h1, h2, h3, h4, .titulo-fecha, .marca, .kpi .v, .total-grande, .cita .h {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.kpi .t, th { letter-spacing: 0.06em; }
+
+/* ---------- Botones que rebotan ---------- */
+.btn, .fab, .tira-dias button, .pestanas button, .horas-grid button, .menu-ajustes button,
+.nav a, .btn-icono, .chip-sync, .hueco, .sugerencias button, .wa .ops button {
+  transition: transform .25s var(--rebote), box-shadow .25s ease, background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.btn { border-radius: 999px; padding-inline: 18px; }
+.btn-chico { border-radius: 999px; }
+.btn:hover:not(:disabled), .tira-dias button:hover, .pestanas button:hover, .horas-grid button:hover { transform: translateY(-2px); }
+.btn:active:not(:disabled), .fab:active, .tira-dias button:active, .pestanas button:active,
+.horas-grid button:active, .menu-ajustes button:active, .nav a:active, .btn-icono:active,
+.hueco:active, .wa .ops button:active { transform: scale(.93); transition-duration: .08s; }
+.btn-pri {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pri) 78%, #ff8fbf), var(--pri));
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--pri) 30%, transparent);
+}
+.btn-pri:hover:not(:disabled) { box-shadow: 0 10px 22px color-mix(in srgb, var(--pri) 38%, transparent); }
+.btn-ok { background: linear-gradient(135deg, #34c38f, #15803d); box-shadow: 0 6px 16px rgba(21, 128, 61, .25); }
+.btn-peligro { background: linear-gradient(135deg, #fb7185, #dc2626); box-shadow: 0 6px 16px rgba(220, 38, 38, .22); }
+.btn-sec { border-color: var(--borde); }
+.btn-sec:hover:not(:disabled) { border-color: color-mix(in srgb, var(--pri) 35%, var(--borde)); box-shadow: var(--sombra); }
+.btn-suave { background: var(--pri-suave); }
+.btn:focus-visible, .fab:focus-visible, .nav a:focus-visible, .tira-dias button:focus-visible, .btn-icono:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--pri) 45%, transparent); outline-offset: 2px;
+}
+
+/* Botón flotante "+ Cita": brillo que respira */
+.fab {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pri) 70%, #ff9cc8), var(--pri));
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--pri) 40%, transparent);
+  animation: respira 3.2s ease-in-out infinite;
+}
+.fab:hover { transform: translateY(-3px) scale(1.04); }
+@keyframes respira {
+  0%, 100% { box-shadow: 0 10px 26px color-mix(in srgb, var(--pri) 38%, transparent); }
+  50% { box-shadow: 0 12px 34px color-mix(in srgb, var(--pri) 55%, transparent), 0 0 0 7px color-mix(in srgb, var(--pri) 10%, transparent); }
+}
+
+/* ---------- Tarjetas suaves que aparecen con saltito ---------- */
+.tarjeta, .kpi, .cita, .tarjeta-login { border-radius: var(--radio); border: 1px solid var(--borde); }
+.cita { border-left-width: 6px; border-left-color: var(--color, var(--pri)); }
+.cita, .kpi, .menu-ajustes .tarjeta { animation: aparece-suave .45s var(--rebote) backwards; }
+.lista-citas > :nth-child(2), .resumen-dia > :nth-child(2), .kpis > :nth-child(2) { animation-delay: .04s; }
+.lista-citas > :nth-child(3), .resumen-dia > :nth-child(3), .kpis > :nth-child(3) { animation-delay: .08s; }
+.lista-citas > :nth-child(4), .resumen-dia > :nth-child(4), .kpis > :nth-child(4) { animation-delay: .12s; }
+.lista-citas > :nth-child(n+5), .kpis > :nth-child(n+5) { animation-delay: .16s; }
+@keyframes aparece-suave { from { opacity: .4; transform: translateY(8px) scale(.98); } }
+.cita:hover, .menu-ajustes .tarjeta:hover { transform: translateY(-3px); box-shadow: var(--sombra-alta); }
+.cita, .menu-ajustes .tarjeta { transition: transform .25s var(--rebote), box-shadow .25s ease; }
+
+/* Indicadores del día en colores pastel */
+.resumen-dia .kpi:nth-child(1), .kpis .kpi:nth-child(4n+1) { background: linear-gradient(160deg, var(--rosa-polvo), #fff 75%); }
+.resumen-dia .kpi:nth-child(2), .kpis .kpi:nth-child(4n+2) { background: linear-gradient(160deg, var(--lila), #fff 75%); }
+.resumen-dia .kpi:nth-child(3), .kpis .kpi:nth-child(4n+3) { background: linear-gradient(160deg, var(--durazno), #fff 75%); }
+.resumen-dia .kpi:nth-child(4), .kpis .kpi:nth-child(4n+4) { background: linear-gradient(160deg, var(--menta), #fff 75%); }
+
+/* ---------- Tira de días ---------- */
+.tira-dias button { border-radius: 18px; }
+.tira-dias button.sel {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pri) 72%, #ff9cc8), var(--pri));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--pri) 32%, transparent);
+  transform: translateY(-2px);
+}
+.tira-dias button.con-citas .p { animation: late 2.4s ease-in-out infinite; }
+@keyframes late { 50% { transform: scale(1.5); } }
+
+/* ---------- Chips de estado (pastel con puntito) ---------- */
+.chip { border-radius: 999px; padding: 3px 10px; font-weight: 700; }
+.chip-pendiente::before, .chip-confirmada::before, .chip-completada::before, .chip-no_asistio::before, .chip-wa::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .8;
+}
+.chip-pendiente { background: #fff1d6; }
+.chip-confirmada { background: var(--cielo); }
+.chip-completada { background: var(--menta); }
+
+/* ---------- Barra, menú y campanita ---------- */
+.barra { background: color-mix(in srgb, var(--fondo) 80%, transparent); border-bottom-color: transparent; box-shadow: 0 1px 0 var(--borde); }
+.logo-chico { border-radius: 11px; box-shadow: 0 4px 10px color-mix(in srgb, var(--pri) 25%, transparent); transition: transform .4s var(--rebote); }
+.marca:hover .logo-chico { transform: rotate(-8deg) scale(1.08); }
+.nav { border-top-color: var(--borde); box-shadow: 0 -6px 20px color-mix(in srgb, var(--pri) 7%, transparent); }
+.nav a { border-radius: 16px; }
+.nav a.activo .ico { animation: brinca .5s var(--rebote); }
+@keyframes brinca { 40% { transform: translateY(-5px) scale(1.15); } }
+@media (min-width: 900px) { .menu-lateral { background: color-mix(in srgb, var(--tarjeta) 85%, transparent); border-right-color: var(--borde); } }
+.campana:has(.burbuja:not(.oculto)) { animation: campanita 2.8s ease-in-out infinite; transform-origin: 50% 20%; }
+@keyframes campanita { 0%, 70%, 100% { transform: rotate(0); } 74% { transform: rotate(14deg); } 80% { transform: rotate(-12deg); } 86% { transform: rotate(8deg); } 92% { transform: rotate(-4deg); } }
+.burbuja { animation: pop .4s var(--rebote); box-shadow: 0 0 0 2px var(--fondo); }
+@keyframes pop { from { transform: scale(0); } }
+.chip-sync { border-radius: 999px; }
+
+/* ---------- Modales y avisos con resorte ---------- */
+.modal-hoja { border-radius: 28px 28px 0 0; animation: sube-resorte .38s var(--rebote); }
+@media (min-width: 700px) { .modal-hoja { border-radius: 28px; } }
+@keyframes sube-resorte { from { transform: translateY(60px) scale(.97); opacity: 0; } }
+.modal-fondo { background: color-mix(in srgb, #3b2333 40%, transparent); backdrop-filter: blur(3px); }
+.toast { border-radius: 18px; animation: toast-entra .45s var(--rebote); }
+.toast-aviso { background: linear-gradient(135deg, color-mix(in srgb, var(--pri) 75%, #ff9cc8), var(--pri)); box-shadow: 0 10px 26px color-mix(in srgb, var(--pri) 35%, transparent); }
+@keyframes toast-entra { from { transform: translateY(-18px) scale(.9); opacity: 0; } }
+
+/* ---------- Formularios ---------- */
+input, select, textarea { border-radius: 14px; border-color: var(--borde); background: #fffdfe; transition: border-color .2s, box-shadow .2s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 4px color-mix(in srgb, var(--pri) 14%, transparent); }
+.horas-grid button { border-radius: 14px; }
+.horas-grid button.sel { background: var(--pri); box-shadow: 0 6px 14px color-mix(in srgb, var(--pri) 30%, transparent); }
+.pestanas button { border-radius: 999px; }
+.pestanas button.sel { background: linear-gradient(135deg, color-mix(in srgb, var(--pri) 75%, #ff9cc8), var(--pri)); box-shadow: 0 6px 14px color-mix(in srgb, var(--pri) 28%, transparent); }
+.avatar { background: linear-gradient(135deg, var(--rosa-polvo), var(--lila)); }
+.barras .b { border-radius: 10px 10px 4px 4px; background: linear-gradient(180deg, color-mix(in srgb, var(--pri) 55%, #ffb3d1), var(--pri)); transform-origin: bottom; animation: crece .7s var(--rebote) both; }
+@keyframes crece { from { transform: scaleY(.15); } }
+.vacio .grande { display: inline-block; animation: flota 3s ease-in-out infinite; }
+@keyframes flota { 50% { transform: translateY(-6px) rotate(-4deg); } }
+.spinner { border-top-color: var(--pri); border-right-color: color-mix(in srgb, var(--pri) 40%, transparent); }
+
+/* Pantalla de entrada */
+.tarjeta-login { box-shadow: var(--sombra-alta); animation: sube-resorte .5s var(--rebote); }
+.logo-login { border-radius: 22px; box-shadow: 0 10px 24px color-mix(in srgb, var(--pri) 30%, transparent); animation: flota 3.5s ease-in-out infinite; }
+
+/* Simulador de WhatsApp */
+.wa { border-radius: 22px; }
+.wa .burb { border-radius: 16px; animation: toast-entra .35s var(--rebote); }
+.wa .ops button { border-radius: 14px; }
+.wa .ops button:hover { transform: translateY(-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+}
