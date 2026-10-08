@@ -22,6 +22,7 @@ import {
   rellenar,
   ESTADOS_QUE_OCUPAN,
   citasEnConflicto,
+  estiloDe,
 } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales } from "../ui.js";
 import { cobrarCita, deshacerCobro } from "./cobro.js";
@@ -215,7 +216,7 @@ export function detalleCita(id) {
       </div>
       <div class="tarjeta" style="margin-top:12px;box-shadow:none;border:1px solid var(--borde)">
         <div>📅 ${fechaLarga(c.fecha)}, ${hora12(c.hora)} (${c.duracion || 30} min)</div>
-        <div>💆 ${esc(c.servicioNombre)} — ${formatoMoneda(c.precio, base)}</div>
+        <div>${estiloDe(E.config).iconoServicio} ${esc(c.servicioNombre)} — ${formatoMoneda(c.precio, base)}</div>
         ${c.profesionalNombre ? `<div>💇 ${esc(c.profesionalNombre)}</div>` : ""}
         ${c.origen === "whatsapp" ? "<div>🤖 Agendada por el bot de WhatsApp</div>" : ""}
         ${c.estado === "completada" ? `<div class="positivo">💵 Cobrado: ${formatoMoneda(c.pagadoBase, base)}</div>` : ""}

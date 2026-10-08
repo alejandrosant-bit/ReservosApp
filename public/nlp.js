@@ -21,7 +21,8 @@ const DIAS_TEXTO = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, v
 const RE_CANCELAR = /\b(cancel\w*|anul\w*|no (voy|puedo|podre) (a )?(ir|asistir|llegar)|no podre ir|eliminar (la|mi) cita|borrar (la|mi) cita|desagendar)\b/;
 const RE_REAGENDAR = /\b(reagend\w*|cambiar (la|mi) (cita|hora)|mover (la|mi) cita|reprogram\w*)\b/;
 const RE_AGENDAR = /\b(cita|agend\w*|reserv\w*|turno|apart\w*|cupo|disponib\w*|separar|quiero (un|una)|necesito (un|una)|tienes (algo|espacio|cupo)|hay (espacio|cupo))\b/;
-const RE_MIS_CITAS = /\b(mis citas|mi cita|tengo cita|cuando es mi cita|ver citas|a que hora es mi cita)\b/;
+// Ojo: "mi cita" a secas no cuenta ("quiero agendar mi cita mañana" es agendar)
+const RE_MIS_CITAS = /\b(mis citas|tengo cita|cuando es mi cita|ver citas|ver mi cita|a que hora es mi cita|mis turnos|tengo turno|cuando es mi turno|a que hora es mi turno)\b/;
 const RE_SALUDO = /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hey|ola|saludos|que tal|alo)\b/;
 const RE_GRACIAS = /\b(gracias|muchas gracias|ok gracias|listo gracias|chao|adios|hasta luego|bendiciones)\b/;
 const RE_SI = /^(si|sii+|sip|claro|dale|ok|okay|listo|confirmo|confirmar|de una|perfecto|correcto|esta bien|va|vale|por favor)\b/;

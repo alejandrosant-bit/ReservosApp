@@ -2,7 +2,7 @@
 // Reportes y arqueo semanal / mensual
 // ============================================================
 import { E, hoy, rango, listarColeccion, where } from "../datos.js";
-import { formatoMoneda, sumarDias, inicioSemana, inicioMes, finMes, fechaCorta, diferenciaDias, MESES, normalizar } from "../core.js";
+import { estiloDe, formatoMoneda, sumarDias, inicioSemana, inicioMes, finMes, fechaCorta, diferenciaDias, MESES, normalizar } from "../core.js";
 import { esc, descargar, aCSV } from "../ui.js";
 
 let cont = null;
@@ -160,7 +160,7 @@ async function pintar() {
     ${tabla("💳 Ingresos por método de pago", ["Método", "Monto", `Equivale (${base})`], r.porMetodo.map((x) => [esc(x.metodo) + ` <span class="mini suave">${x.moneda}</span>`, formatoMoneda(x.monto, x.moneda), f(x.base)]))}
 
     ${tabla(
-      "💆 Servicios más vendidos",
+      `${estiloDe(E.config).iconoServicio} Servicios más vendidos`,
       ["Servicio", "Cantidad", "Ingresos"],
       r.porServicio.map((x) => [esc(x.nombre), x.cantidad, f(x.ingresos)]),
       ["Total", r.porServicio.reduce((s, x) => s + x.cantidad, 0), f(r.porServicio.reduce((s, x) => s + x.ingresos, 0))]

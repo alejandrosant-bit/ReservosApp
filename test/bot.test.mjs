@@ -234,3 +234,29 @@ test("detecta citas cruzadas creadas a mano (sobrecupo)", async () => {
   assert.deepEqual([...citasEnConflicto(citas, { capacidad: 1 }, [])].sort(), ["a", "b", "c"]);
   assert.equal(citasEnConflicto(citas, { capacidad: 3 }, []).size, 0);
 });
+
+// ------------------------------------------------------------
+// Estilo barbería: mismo bot, otro tono
+// ------------------------------------------------------------
+test("barbería: el bot habla de turnos y con tono de barbería", async () => {
+  const store = crearStoreMemoria({ config: { nombre: "Barbería El Clásico", estilo: "barberia" }, servicios: SERVICIOS });
+  let r = await enviar(store, "hola");
+  assert.match(todoTexto(r), /Bienvenido a \*Barbería El Clásico\*/);
+  assert.match(todoTexto(r), /Max/);
+  assert.ok(r.mensajes.at(-1).botones.some((b) => b.titulo.includes("Pedir turno")));
+  r = await enviar(store, "quiero un corte el jueves a las 3");
+  r = await enviar(store, "Carlos Ruiz");
+  r = await enviar(store, "1020304050");
+  assert.match(todoTexto(r), /¿Te lo aparto\?/);
+  r = await enviar(store, "dale");
+  assert.match(todoTexto(r), /turno quedó apartado/);
+  assert.match(todoTexto(r), /Llega puntual/);
+  r = await enviar(store, "quiero cancelar mi turno");
+  assert.match(todoTexto(r), /A nombre de quién está el turno/);
+});
+
+test("'agendar mi cita' es agendar, no consultar", () => {
+  const ctx = { hoyISO: AHORA.fecha, servicios: SERVICIOS };
+  assert.equal(analizar("quiero agendar mi cita para mañana", ctx).intencion, "agendar");
+  assert.equal(analizar("a qué hora es mi turno?", ctx).intencion, "miscitas");
+});

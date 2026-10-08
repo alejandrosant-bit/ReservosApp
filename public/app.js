@@ -2,10 +2,10 @@
 // Reservo — arranque, sesión, navegación y avisos
 // ============================================================
 import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, actualizar } from "./datos.js";
-import { permitirRegistro } from "./firebase-config.js";
+import * as cfgFirebase from "./firebase-config.js";
 import { $, $$, esc, toast, sonar, abrirModal, celebrar } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
-import { hora12, formatoMoneda } from "./core.js";
+import { hora12, formatoMoneda, estiloDe } from "./core.js";
 
 const VISTAS = {
   agenda: () => import("./vistas/agenda.js"),
@@ -35,7 +35,7 @@ if ("serviceWorker" in navigator) {
 let modoRegistro = false;
 function prepararLogin() {
   const cambiar = $("#login-cambiar");
-  if (permitirRegistro) cambiar.classList.remove("oculto");
+  if (cfgFirebase.permitirRegistro) cambiar.classList.remove("oculto");
   cambiar.onclick = () => {
     modoRegistro = !modoRegistro;
     $("#login-boton").textContent = modoRegistro ? "Crear cuenta" : "Entrar";
@@ -171,31 +171,56 @@ function alNuevoMovimiento(m) {
     const quien = pagosPendientes.find((x) => x.concepto)?.concepto.split(" — ")[1] || "";
     pagosPendientes = [];
     if (total <= 0) return;
-    celebrar({ tipo: "pago", icono: "💸", titulo: "¡Pago recibido!", detalle: `${formatoMoneda(total, E.config.monedaPrincipal)}${quien ? " · " + quien : ""}` });
+    const est = estiloDe(E.config);
+    celebrar({ tipo: "pago", icono: est.lluviaPago[0], lluvia: est.lluviaPago, titulo: est.tituloPago, detalle: `${formatoMoneda(total, E.config.monedaPrincipal)}${quien ? " · " + quien : ""}` });
   }, 700);
 }
 function alNuevoCliente(c) {
   const nombre = String(c.nombre || "").split(" ")[0];
+  const est = estiloDe(E.config);
   celebrar({
     tipo: "cliente",
-    icono: c.origen === "whatsapp" ? "💬" : "🌸",
-    titulo: "¡Nuevo cliente!",
-    detalle: `${nombre ? "Bienvenid@, " + nombre : "Bienvenid@"}${c.origen === "whatsapp" ? " · llegó por WhatsApp" : ""}`,
+    icono: c.origen === "whatsapp" ? "💬" : est.iconoCliente,
+    lluvia: est.lluviaCliente,
+    titulo: est.tituloCliente,
+    detalle: `${est.bienvenida(nombre)}${c.origen === "whatsapp" ? " · llegó por WhatsApp" : ""}`,
   });
 }
 
 // ------------------------------------------------------------
 // Marca del negocio (nombre, color, logo)
 // ------------------------------------------------------------
+// Estilo visual: "belleza" (spa) o "barberia". Un despliegue puede
+// fijar el estilo de la pantalla de entrada con estiloPorDefecto.
+const ESTILO_DESPLIEGUE = cfgFirebase.estiloPorDefecto || "belleza";
+function aplicarEstilo(estilo) {
+  const barberia = estilo === "barberia";
+  document.documentElement.dataset.estilo = barberia ? "barberia" : "belleza";
+  // Ícono e instalación con la identidad de cada estilo
+  const icono = barberia ? "./icon-barber-192.png" : "./icon-192.png";
+  $('link[rel="manifest"]')?.setAttribute("href", barberia ? "./manifest-barber.json" : "./manifest.json");
+  $('link[rel="apple-touch-icon"]')?.setAttribute("href", icono);
+  $('link[rel="icon"]')?.setAttribute("href", icono);
+  $$("[data-logo]").forEach((el) => {
+    if (!E.config.logo) el.src = icono;
+  });
+  const login = $("#login-logo");
+  if (login && !login.dataset.propio) login.src = icono;
+  const titulo = $("#login-titulo");
+  if (titulo && !titulo.dataset.propio) titulo.textContent = barberia ? "Reservo Barber" : "Reservo";
+}
+aplicarEstilo(ESTILO_DESPLIEGUE);
+
 function aplicarMarca() {
   const c = E.config;
+  aplicarEstilo(c.estilo || ESTILO_DESPLIEGUE);
   document.documentElement.style.setProperty("--pri", c.colorPrimario || "#c2185b");
   $('meta[name="theme-color"]').setAttribute("content", c.colorPrimario || "#c2185b");
   $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Reservo"));
-  $$("[data-logo]").forEach((el) => (el.src = c.logo || "./icon-192.png"));
-  document.title = c.nombre || "Reservo";
+  $$("[data-logo]").forEach((el) => (el.src = c.logo || (document.documentElement.dataset.estilo === "barberia" ? "./icon-barber-192.png" : "./icon-192.png")));
+  document.title = c.nombre || (c.estilo === "barberia" ? "Reservo Barber" : "Reservo");
   try {
-    localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, logo: c.logo }));
+    localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, logo: c.logo, estilo: c.estilo }));
   } catch {}
 }
 
@@ -203,13 +228,16 @@ function marcaGuardada() {
   try {
     const m = JSON.parse(localStorage.getItem("marca") || "null");
     if (!m) return;
+    if (m.estilo) aplicarEstilo(m.estilo);
     if (m.color) document.documentElement.style.setProperty("--pri", m.color);
     if (m.nombre) {
       $("#login-titulo").textContent = m.nombre;
+      $("#login-titulo").dataset.propio = "1";
       $$("[data-nombre-negocio]").forEach((el) => (el.textContent = m.nombre));
     }
     if (m.logo) {
       $("#login-logo").src = m.logo;
+      $("#login-logo").dataset.propio = "1";
       $$("[data-logo]").forEach((el) => (el.src = m.logo));
     }
   } catch {}

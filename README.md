@@ -27,6 +27,24 @@ app y **trabaja sin internet**.
 | ⚙️ **Personalización** | Nombre, logo, color, dirección; **monedas que maneja y tasas de cambio**; métodos de pago (Nequi, Daviplata, Pago móvil, Zelle, Binance…); horario por día, almuerzo y feriados; intervalos, anticipación, horas mínimas para cancelar; servicios (precio, duración, palabras clave para el bot); profesionales (servicios que hacen, comisión); **todos los mensajes del bot editables**; simulador para probar el bot. |
 | 📴 **Sin internet** | Abre sin conexión mostrando lo último sincronizado (el indicador dice “Sin internet · datos de las 3:40 pm”). Todo lo que hagas se guarda en el teléfono y **se sube solo** cuando vuelve la señal. |
 
+### 💈 Dos estilos: Spa y Barbería
+
+La misma app tiene dos personalidades. Cambia **colores, letras, íconos,
+celebraciones y el tono del bot de WhatsApp**; las pantallas y funciones
+son idénticas.
+
+| | Spa y belleza | Barbería (Reservo Barber) |
+|---|---|---|
+| Look | Rosa pastel, letras redondeadas, animaciones con rebote | Carbón y latón, franja de poste de barbero, letras condensadas |
+| Bot | "Bienvenid@ a *Spa Luna*. Soy Sofi…" — "cita" | "¡Qué más! 💈 Bienvenido a *El Clásico*. Soy Max…" — "turno" |
+| Celebraciones | "¡Pago recibido!" 💖 / "¡Nuevo cliente!" 🌸 | "¡Billete a la caja!" 💵 / "¡Cliente nuevo en la silla!" 💈 |
+
+- Al crear el negocio, elegir **Barbería** activa ese estilo con servicios de barbería de ejemplo.
+- Se puede cambiar en **Ajustes → Mi negocio → Estilo de la app** (el bot adopta el tono nuevo).
+- Para vender **Reservo Barber como un sitio aparte**, haz otro sitio en Netlify desde este mismo
+  repositorio y pon `estiloPorDefecto = "barberia"` en `public/firebase-config.js` de esa copia
+  (o en una rama propia): la pantalla de entrada, el ícono y la instalación salen como barbería.
+
 ### Ideas tomadas de los programas exitosos
 
 Revisamos Fresha, Booksy, AgendaPro y bots de WhatsApp para salones en

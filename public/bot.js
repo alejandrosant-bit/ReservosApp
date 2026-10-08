@@ -66,6 +66,8 @@ function idsOfrecidos(mensajes) {
 // ------------------------------------------------------------
 export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntrada = "", opcionId = null }, store, opciones = {}) {
   const config = conDefectos(store.config);
+  // Vocabulario según el estilo del negocio (spa: "cita"; barbería: "turno")
+  const tx = (belleza, barberia) => (config.estilo === "barberia" ? barberia : belleza);
   const ahora = opciones.ahora || ahoraEnZona(config.zonaHoraria);
   const servicios = (store.servicios || []).filter((s) => s.activo !== false);
   const profesionales = store.profesionales || [];
@@ -106,9 +108,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
 
   function menuPrincipal(encabezado) {
     return botones(encabezado, [
-      { id: "menu:agendar", titulo: "📅 Agendar cita" },
-      { id: "menu:cancelar", titulo: "❌ Cancelar cita" },
-      { id: "menu:miscitas", titulo: "🗓️ Mis citas" },
+      { id: "menu:agendar", titulo: tx("📅 Agendar cita", "📅 Pedir turno") },
+      { id: "menu:cancelar", titulo: tx("❌ Cancelar cita", "❌ Cancelar turno") },
+      { id: "menu:miscitas", titulo: tx("🗓️ Mis citas", "🗓️ Mis turnos") },
     ]);
   }
 
@@ -143,7 +145,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
       descripcion: `${d.horas.length} horario${d.horas.length === 1 ? "" : "s"} libre${d.horas.length === 1 ? "" : "s"} · desde ${hora12(d.horas[0])}`,
     }));
     if (dias.length > desde + pagina.length) filas.push({ id: `mas:dia:${desde + pagina.length}`, titulo: "Más días ➡️" });
-    salida.push(lista([prefijo, msg("elegirDia", { servicio: servicio?.nombre || "cita" })].filter(Boolean).join("\n\n"), filas, "Ver días"));
+    salida.push(lista([prefijo, msg("elegirDia", { servicio: servicio?.nombre || tx("cita", "turno") })].filter(Boolean).join("\n\n"), filas, "Ver días"));
   }
 
   async function horasDe(fecha) {
@@ -333,7 +335,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
           fecha: fechaLarga(cita.fecha),
           hora: hora12(cita.hora),
           profesional: cita.profesionalNombre,
-          profesional_linea: cita.profesionalNombre ? `\n💇 Con ${cita.profesionalNombre}` : "",
+          profesional_linea: cita.profesionalNombre ? `\n${tx("💇", "✂️")} Con ${cita.profesionalNombre}` : "",
         })
       )
     );
@@ -364,7 +366,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
       lista(
         msg("elegirCitaCancelar", { cliente: nombre }),
         citas.map((c) => ({ id: `cancel:${c.id}`, titulo: `${fechaCorta(c.fecha)} ${hora12(c.hora)}`, descripcion: c.servicioNombre })),
-        "Ver mis citas"
+        tx("Ver mis citas", "Ver mis turnos")
       )
     );
   }
@@ -409,11 +411,11 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
     const citas = clientes.length ? await citasFuturasDe(clientes) : [];
     estado.paso = "inicio";
     if (!citas.length) {
-      salida.push(menuPrincipal([prefijo, "No tienes citas próximas registradas con este número. ¿Quieres agendar una?"].filter(Boolean).join("\n\n")));
+      salida.push(menuPrincipal([prefijo, tx("No tienes citas próximas registradas con este número. ¿Quieres agendar una?", "No tienes turnos próximos con este número. ¿Te aparto uno?")].filter(Boolean).join("\n\n")));
       return;
     }
     const lineas = citas.map((c) => `• *${fechaLarga(c.fecha)}* a las *${hora12(c.hora)}* — ${c.servicioNombre}`);
-    salida.push(menuPrincipal([prefijo, `Tus próximas citas:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
+    salida.push(menuPrincipal([prefijo, `${tx("Tus próximas citas", "Tus próximos turnos")}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
   }
 
   // ----- Mezcla lo que entendimos del texto con lo que ya sabíamos -----
@@ -462,7 +464,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
         const hayDatosDeCita = a.servicio || a.serviciosCandidatos.length || a.fecha || a.hora;
         if (a.intencion === "reagendar") {
           await empezarCancelacion(
-            (esNuevaConversacion ? bienvenida() + "\n\n" : "") + "Para cambiar tu cita primero cancelamos la actual y luego te ayudo a agendar la nueva. 😉"
+            (esNuevaConversacion ? bienvenida() + "\n\n" : "") + tx("Para cambiar tu cita primero cancelamos la actual y luego te ayudo a agendar la nueva. 😉", "Para cambiar tu turno primero cancelamos el actual y luego te aparto uno nuevo 👊")
           );
           datos.reagendar = true;
         } else if (a.intencion === "agendar" || hayDatosDeCita) {
@@ -641,7 +643,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
         const cliente = ced ? await store.buscarClientePorCedula(ced) : null;
         if (!cliente || !(datos.clientesCancelar || []).includes(cliente.id)) {
           estado.paso = "inicio";
-          salida.push(menuPrincipal("La cédula no coincide con la de la cita 🙏. Si necesitas ayuda comunícate directamente con el negocio."));
+          salida.push(menuPrincipal(tx("La cédula no coincide con la de la cita 🙏. Si necesitas ayuda comunícate directamente con el negocio.", "La cédula no coincide con la del turno. Si necesitas ayuda llama directo a la barbería.")));
           break;
         }
         await mostrarCitasParaCancelar([cliente.id], cliente.nombre);
@@ -661,9 +663,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
           const todas = await store.citasPorIds(datos.cancelables || []);
           salida.push(
             lista(
-              "¿Cuál cita deseas cancelar?",
+              tx("¿Cuál cita deseas cancelar?", "¿Cuál turno cancelo?"),
               todas.map((c) => ({ id: `cancel:${c.id}`, titulo: `${fechaCorta(c.fecha)} ${hora12(c.hora)}`, descripcion: c.servicioNombre })),
-              "Ver mis citas"
+              tx("Ver mis citas", "Ver mis turnos")
             )
           );
           break;
@@ -693,11 +695,11 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
             datos.fecha = null;
             datos.hora = null;
             datos.franja = null;
-            await empezarAgenda("Ahora elijamos tu nueva cita 👇");
+            await empezarAgenda(tx("Ahora elijamos tu nueva cita 👇", "Ahora escojamos tu nuevo turno 👇"));
           }
         } else {
           estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
-          salida.push(menuPrincipal("¡Perfecto! Tu cita sigue en pie 😊. ¿Te ayudo con algo más?"));
+          salida.push(menuPrincipal(tx("¡Perfecto! Tu cita sigue en pie 😊. ¿Te ayudo con algo más?", "¡Listo! Tu turno sigue en pie 👊. ¿Algo más?")));
         }
         break;
       }

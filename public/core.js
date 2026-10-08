@@ -348,6 +348,64 @@ export const MENSAJES_POR_DEFECTO = {
   fueraDeServicio: "En este momento el agendamiento por WhatsApp no está disponible. Por favor llámanos. 🙏",
 };
 
+// Mismo bot con tono de barbería: directo, relajado y masculino.
+export const MENSAJES_BARBERIA = {
+  bienvenida: "¡Qué más{cliente_coma}! 💈 Bienvenido a *{negocio}*. Soy {asistente}, el asistente de la barbería. ¿Qué necesitas?",
+  pedirNombre: "Listo, para apartarte el turno, ¿me das tu *nombre y apellido*?",
+  pedirCedula: "Gracias, {cliente}. Pásame tu número de *cédula* (solo números).",
+  elegirServicio: "¿Qué te vas a hacer? Escoge 👇",
+  elegirDia: "¿Qué día te sirve para tu *{servicio}*?",
+  elegirHora: "Estos son los turnos libres el *{fecha}* 👇",
+  horaDisponible: "¡Hay silla! El *{fecha}* a las *{hora}* está libre para *{servicio}*. ¿Te lo aparto?",
+  horaOcupada: "Ese turno del *{fecha}* a las *{hora}* ya está tomado. Estos son los más cercanos:",
+  diaCerrado: "Ese día la barbería está cerrada. Estos son los próximos días con turnos:",
+  confirmada:
+    "✅ ¡Listo, {cliente}! Tu turno quedó apartado:\n\n💈 *{servicio}*\n📅 {fecha}\n🕒 {hora}{profesional_linea}\n📍 {direccion}\n\nLlega puntual 👊. Si no puedes venir, avísanos *mínimo {horas_cancelacion} horas antes* escribiendo _\"cancelar mi turno\"_, así le damos la silla a otro.\n\n¡Nos vemos!",
+  pedirNombreCancelar: "Sin problema. ¿A nombre de quién está el turno? (nombre y apellido)",
+  elegirCitaCancelar: "Estos son los turnos de *{cliente}*. ¿Cuál cancelo?",
+  confirmarCancelar: "¿Cancelo tu turno de *{servicio}* del *{fecha}* a las *{hora}*?",
+  cancelada: "Listo, cancelé tu turno de *{servicio}* del {fecha} a las {hora} ✅. Gracias por avisar. Cuando quieras volver, escríbenos 💈",
+  sinCitas: "No encontré turnos próximos a nombre de *{cliente}*. Revisa que el nombre esté igual a como lo diste al agendar.",
+  muyTarde:
+    "Tu turno de *{servicio}* es hoy a las *{hora}* y faltan menos de {horas_cancelacion} horas, por aquí ya no se puede cancelar. Llama directo a la barbería, porfa.",
+  despedida: "¡De una! Que te vaya bien 👊",
+  noEntendi: "No te entendí bien. Escoge una de las opciones 👇",
+  recordatorio: "⏰ Qué más {cliente}, te recordamos tu turno de *{servicio}* hoy {fecha} a las *{hora}* en {negocio}. ¡Te esperamos! Si no puedes venir responde *cancelar*.",
+  fueraDeServicio: "Ahora mismo no estamos agendando por WhatsApp. Llámanos directo, porfa.",
+};
+
+// Estilos de la app: misma interfaz, distinto tono.
+export const ESTILOS = {
+  belleza: {
+    nombre: "Spa y belleza",
+    color: "#c2185b",
+    asistente: "Sofi",
+    mensajes: MENSAJES_POR_DEFECTO,
+    iconoServicio: "💆",
+    lluviaPago: ["💸", "💰", "✨", "💖", "🪙"],
+    lluviaCliente: ["💖", "🌸", "✨", "🎀", "💕"],
+    iconoCliente: "🌸",
+    tituloPago: "¡Pago recibido!",
+    tituloCliente: "¡Nuevo cliente!",
+    bienvenida: (n) => (n ? `Bienvenid@, ${n}` : "Bienvenid@"),
+  },
+  barberia: {
+    nombre: "Barbería",
+    color: "#a16207",
+    asistente: "Max",
+    mensajes: MENSAJES_BARBERIA,
+    iconoServicio: "💈",
+    lluviaPago: ["💵", "💰", "🪙", "🔥", "💸"],
+    lluviaCliente: ["💈", "✂️", "🪒", "🔥", "👊"],
+    iconoCliente: "💈",
+    tituloPago: "¡Billete a la caja!",
+    tituloCliente: "¡Cliente nuevo en la silla!",
+    bienvenida: (n) => (n ? `Bienvenido, ${n}` : "Bienvenido"),
+  },
+};
+
+export const estiloDe = (config) => ESTILOS[config?.estilo] || ESTILOS.belleza;
+
 export function rellenar(plantilla, vars) {
   return String(plantilla || "").replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ""));
 }
@@ -380,8 +438,9 @@ export const CONFIG_POR_DEFECTO = {
 };
 
 export function conDefectos(config) {
-  const c = { ...CONFIG_POR_DEFECTO, ...(config || {}) };
-  c.mensajes = { ...MENSAJES_POR_DEFECTO, ...(config?.mensajes || {}) };
+  const est = estiloDe(config);
+  const c = { ...CONFIG_POR_DEFECTO, colorPrimario: est.color, asistente: est.asistente, ...(config || {}) };
+  c.mensajes = { ...est.mensajes, ...(config?.mensajes || {}) };
   c.horario = { ...HORARIO_POR_DEFECTO, ...(config?.horario || {}) };
   return c;
 }

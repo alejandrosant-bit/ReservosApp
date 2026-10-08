@@ -7,7 +7,7 @@
 //    3:00 pm") aunque la app esté cerrada.
 // Al cambiar cualquier archivo, sube el número de VERSION.
 // ============================================================
-const VERSION = "reservo-v3";
+const VERSION = "reservo-v4";
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 const ARCHIVOS = [
   "./",
@@ -31,6 +31,9 @@ const ARCHIVOS = [
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./manifest-barber.json",
+  "./icon-barber-192.png",
+  "./icon-barber-512.png",
   `${SDK}/firebase-app.js`,
   `${SDK}/firebase-auth.js`,
   `${SDK}/firebase-firestore.js`,

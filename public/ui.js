@@ -229,14 +229,14 @@ function sonidoFeliz(tipo) {
   } catch {}
 }
 
-export function celebrar({ tipo = "pago", titulo, detalle = "", icono = "🎉", sonido = true } = {}) {
+export function celebrar({ tipo = "pago", titulo, detalle = "", icono = "🎉", sonido = true, lluvia: lluviaPropia = null } = {}) {
   try {
     celebracionActual?.remove();
     const capa = document.createElement("div");
     capa.className = `celebracion celebracion-${tipo}`;
     capa.setAttribute("role", "status");
     capa.setAttribute("aria-live", "polite");
-    const lluvia = tipo === "pago" ? ["💸", "💰", "✨", "💖", "🪙"] : ["💖", "🌸", "✨", "🎀", "💕"];
+    const lluvia = lluviaPropia || (tipo === "pago" ? ["💸", "💰", "✨", "💖", "🪙"] : ["💖", "🌸", "✨", "🎀", "💕"]);
     const reducir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const piezas = reducir
       ? ""

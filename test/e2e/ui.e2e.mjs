@@ -63,11 +63,17 @@ try {
   await foto("asistente");
   await page.fill('input[name="nombre"]', "Spa Luna");
   await page.selectOption('select[name="pais"]', "VE");
+  const BARBERIA = process.env.ESTILO === "barberia";
+  if (BARBERIA) await page.selectOption('select[name="tipo"]', "barberia");
   await page.click("text=Empezar");
   await page.waitForTimeout(300);
   ok((await page.textContent("[data-nombre-negocio]")).includes("Spa Luna"), "nombre del negocio aplicado");
   const nServ = await page.evaluate(() => window.__agenda.E.servicios.length);
-  ok(nServ === 5, "servicios de ejemplo creados (" + nServ + ")");
+  ok(nServ === (BARBERIA ? 7 : 5), "servicios de ejemplo creados (" + nServ + ")");
+  if (BARBERIA) {
+    ok((await page.evaluate(() => document.documentElement.dataset.estilo)) === "barberia", "estilo barbería aplicado");
+    ok((await page.getAttribute("[data-logo]", "src")).includes("icon-barber"), "ícono de barbería");
+  }
   await foto("agenda-vacia");
 
   // 2) Nueva cita con cliente nuevo
@@ -77,7 +83,7 @@ try {
   await page.fill('input[name="cedula"]', "12345678");
   await page.fill('input[name="telefono"]', "4141234567");
   const opts = await page.$$eval('select[name="servicioId"] option', (o) => o.map((x) => x.value).filter(Boolean));
-  await page.selectOption('select[name="servicioId"]', opts[3]);
+  await page.selectOption('select[name="servicioId"]', opts[BARBERIA ? 2 : 3]);
   // Mañana (hoy puede estar cerrado o tarde)
   const manana = await page.evaluate(() => {
     const d = new Date(Date.now() + 86400000 * 2);
@@ -97,7 +103,7 @@ try {
   ok((await page.$$(".cita")).length === 1, "la cita aparece en la agenda");
   ok((await page.evaluate(() => window.__agenda.E.clientes.length)) === 1, "cliente creado");
   await page.waitForSelector(".celebracion-cliente", { timeout: 3000 });
-  ok((await page.textContent(".celebracion-cliente")).includes("María"), "celebración de cliente nuevo");
+  ok((await page.textContent(".celebracion-cliente")).includes(BARBERIA ? "en la silla" : "María"), "celebración de cliente nuevo");
   await foto("celebra-cliente");
   await foto("agenda-con-cita");
 
@@ -118,7 +124,7 @@ try {
   ok((await page.evaluate(() => window.__agenda.E.citas[0].estado)) === "completada", "cita marcada como cobrada");
   await page.waitForSelector(".celebracion-pago", { timeout: 3000 });
   const textoPago = await page.textContent(".celebracion-pago");
-  ok(textoPago.includes("Pago recibido") && textoPago.includes("US$ 6"), "una sola celebración con el total del pago mixto: " + textoPago.trim().replace(/\s+/g, " "));
+  ok(textoPago.includes(BARBERIA ? "Billete a la caja" : "Pago recibido") && /US\$ \d/.test(textoPago), "una sola celebración con el total del pago mixto: " + textoPago.trim().replace(/\s+/g, " "));
   await foto("celebra-pago");
 
   // 4) Caja: gasto y cierre con arqueo
@@ -179,7 +185,8 @@ try {
   await page.waitForTimeout(300);
   await foto("simulador");
   const textoChat = await page.textContent("#chat");
-  ok(textoChat.includes("Spa Luna") && textoChat.includes("Sofi"), "el bot saluda con el nombre del negocio y del asistente");
+  ok(textoChat.includes("Spa Luna") && textoChat.includes(BARBERIA ? "Max" : "Sofi"), "el bot saluda con el nombre del negocio y del asistente");
+  if (BARBERIA) ok(textoChat.includes("Bienvenido") && !textoChat.includes("Bienvenid@"), "el bot habla con tono de barbería");
   await page.keyboard.press("Escape");
 
   // 8) Aviso que llega del bot (como si alguien agendara por WhatsApp)

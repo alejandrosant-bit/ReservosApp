@@ -510,3 +510,143 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 }
 .chip-cruce { background: var(--error-suave); color: var(--error); animation: late 1.6s ease-in-out infinite; }
 .aviso-cruce { background: var(--error-suave); color: var(--error); border-color: color-mix(in srgb, var(--error) 25%, transparent); margin-bottom: 12px; }
+
+/* ============================================================
+   Estilo "Barbería"
+   Concepto: barbería clásica — sillón de cuero, carbón y latón,
+   la franja del poste de barbero (rojo / blanco / azul) como
+   firma. Misma interfaz; letras condensadas en mayúscula,
+   esquinas más rectas y movimientos secos (sin rebote).
+   ============================================================ */
+:root[data-estilo="barberia"] {
+  --fondo: #ecebe8;
+  --tarjeta: #ffffff;
+  --texto: #1b1b1d;
+  --suave: #6a665f;
+  --borde: #dcd8d1;
+  --carbon: #1c1c1f;
+  --carbon-2: #2a2a2e;
+  --laton: #c99a3b;
+  --poste-rojo: #b3261e;
+  --poste-azul: #1f3d7a;
+  --pri-suave: color-mix(in srgb, var(--pri) 12%, #fbf8f2);
+  --rosa-polvo: #f3ebdc;
+  --lila: #e6e9ef;
+  --menta: #e3efe6;
+  --durazno: #f4e6d6;
+  --cielo: #e2e8f2;
+  --radio: 10px;
+  --sombra: 0 1px 2px rgba(20, 18, 15, .08), 0 6px 16px rgba(20, 18, 15, .06);
+  --sombra-alta: 0 4px 10px rgba(20, 18, 15, .14), 0 14px 30px rgba(20, 18, 15, .12);
+  --rebote: cubic-bezier(.2, .8, .2, 1);
+  --fuente: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fuente-titulo: "Oswald", "Barlow Condensed", "Arial Narrow", sans-serif;
+  --poste: repeating-linear-gradient(-45deg, var(--poste-rojo) 0 10px, #ffffff 10px 20px, var(--poste-azul) 20px 30px, #ffffff 30px 40px);
+}
+[data-estilo="barberia"] body {
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(201, 154, 59, .10), transparent 70%),
+    var(--fondo);
+}
+[data-estilo="barberia"] h1, [data-estilo="barberia"] h2, [data-estilo="barberia"] h3,
+[data-estilo="barberia"] .titulo-fecha, [data-estilo="barberia"] .marca, [data-estilo="barberia"] .celebra-titulo {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+[data-estilo="barberia"] .kpi .v, [data-estilo="barberia"] .cita .h, [data-estilo="barberia"] .total-grande { letter-spacing: 0.02em; }
+
+/* Barra superior y menú en carbón, con la franja del poste */
+[data-estilo="barberia"] .barra {
+  background: var(--carbon);
+  color: #f5f1e8;
+  box-shadow: none;
+  border-bottom: 0;
+  position: sticky;
+}
+[data-estilo="barberia"] .barra::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 5px;
+  background: var(--poste); background-size: 56px 56px;
+  animation: poste 6s linear infinite;
+}
+@keyframes poste { to { background-position: 56px 0; } }
+[data-estilo="barberia"] .barra .btn-icono { color: #f5f1e8; }
+[data-estilo="barberia"] .barra .btn-icono:hover { background: rgba(255, 255, 255, .08); }
+[data-estilo="barberia"] .logo-chico { border-radius: 8px; box-shadow: 0 0 0 2px var(--laton); }
+[data-estilo="barberia"] .marca:hover .logo-chico { transform: rotate(0) scale(1.06); }
+[data-estilo="barberia"] .chip-sync.en-linea { background: rgba(52, 195, 143, .16); color: #7ee2b8; }
+[data-estilo="barberia"] .chip-sync.sin-red { background: rgba(245, 158, 11, .18); color: #fcd34d; }
+[data-estilo="barberia"] .chip-sync.subiendo { background: rgba(96, 165, 250, .18); color: #bfdbfe; }
+
+[data-estilo="barberia"] .nav { background: var(--carbon); border-top: 0; box-shadow: 0 -4px 14px rgba(0, 0, 0, .18); }
+[data-estilo="barberia"] .nav a { color: #a8a39a; border-radius: 8px; }
+[data-estilo="barberia"] .nav a .ico { filter: grayscale(1) brightness(1.6); }
+[data-estilo="barberia"] .nav a.activo { color: var(--laton); background: rgba(201, 154, 59, .14); }
+[data-estilo="barberia"] .nav a.activo .ico { filter: none; animation: none; }
+@media (min-width: 900px) {
+  [data-estilo="barberia"] .menu-lateral { background: var(--carbon); border-right: 0; color: #f5f1e8; }
+  [data-estilo="barberia"] .menu-lateral .marca { color: #f5f1e8; }
+  [data-estilo="barberia"] .nav a { color: #b9b4aa; }
+  [data-estilo="barberia"] .nav a:hover { background: rgba(255, 255, 255, .05); }
+}
+
+/* Botones: rectos, firmes, sin degradados rosados */
+[data-estilo="barberia"] .btn { border-radius: 8px; text-transform: uppercase; letter-spacing: .05em; font-size: 14px; }
+[data-estilo="barberia"] .btn-chico, [data-estilo="barberia"] .pestanas button, [data-estilo="barberia"] .chip-sync { border-radius: 8px; }
+[data-estilo="barberia"] .btn-pri, [data-estilo="barberia"] .pestanas button.sel {
+  background: var(--carbon); color: #fff;
+  box-shadow: inset 0 -3px 0 var(--laton), 0 4px 10px rgba(0, 0, 0, .16);
+}
+[data-estilo="barberia"] .btn-pri:hover:not(:disabled) { box-shadow: inset 0 -3px 0 var(--laton), 0 8px 16px rgba(0, 0, 0, .22); }
+[data-estilo="barberia"] .btn-ok { background: #1f6f43; box-shadow: 0 4px 10px rgba(31, 111, 67, .25); }
+[data-estilo="barberia"] .btn-peligro { background: var(--poste-rojo); box-shadow: 0 4px 10px rgba(179, 38, 30, .22); }
+[data-estilo="barberia"] .btn:active:not(:disabled), [data-estilo="barberia"] .fab:active { transform: scale(.96); }
+
+/* "+ Cita": botón carbón con borde de poste de barbero girando */
+[data-estilo="barberia"] .fab {
+  background: var(--carbon); color: #fff; border-radius: 10px;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 4px solid transparent;
+  background-image: linear-gradient(var(--carbon), var(--carbon)), var(--poste);
+  background-origin: border-box; background-clip: padding-box, border-box;
+  background-size: auto, 56px 56px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
+  animation: poste-fab 4s linear infinite;
+}
+@keyframes poste-fab { to { background-position: 0 0, 56px 0; } }
+[data-estilo="barberia"] .fab:hover { transform: translateY(-2px); }
+
+/* Tarjetas */
+[data-estilo="barberia"] .tarjeta, [data-estilo="barberia"] .kpi, [data-estilo="barberia"] .cita, [data-estilo="barberia"] .tarjeta-login { border-radius: var(--radio); }
+[data-estilo="barberia"] .cita { border-left-width: 5px; }
+[data-estilo="barberia"] .resumen-dia .kpi, [data-estilo="barberia"] .kpis .kpi { background: var(--tarjeta) !important; border-top: 3px solid var(--laton); }
+[data-estilo="barberia"] .resumen-dia .kpi:nth-child(2), [data-estilo="barberia"] .kpis .kpi:nth-child(4n+2) { border-top-color: var(--poste-azul); }
+[data-estilo="barberia"] .resumen-dia .kpi:nth-child(3), [data-estilo="barberia"] .kpis .kpi:nth-child(4n+3) { border-top-color: var(--poste-rojo); }
+[data-estilo="barberia"] .resumen-dia .kpi:nth-child(4), [data-estilo="barberia"] .kpis .kpi:nth-child(4n+4) { border-top-color: #1f6f43; }
+[data-estilo="barberia"] .tira-dias button { border-radius: 8px; }
+[data-estilo="barberia"] .tira-dias button.sel { background: var(--carbon); box-shadow: inset 0 -3px 0 var(--laton), 0 6px 14px rgba(0, 0, 0, .2); }
+[data-estilo="barberia"] .tira-dias button.sel .p { background: var(--laton); }
+[data-estilo="barberia"] .horas-grid button { border-radius: 8px; }
+[data-estilo="barberia"] .horas-grid button.sel { background: var(--carbon); box-shadow: inset 0 -3px 0 var(--laton); }
+[data-estilo="barberia"] .avatar { background: var(--carbon); color: var(--laton); }
+[data-estilo="barberia"] .chip { border-radius: 6px; }
+[data-estilo="barberia"] input, [data-estilo="barberia"] select, [data-estilo="barberia"] textarea { border-radius: 8px; background: #fff; }
+[data-estilo="barberia"] .modal-hoja { border-radius: 14px 14px 0 0; }
+@media (min-width: 700px) { [data-estilo="barberia"] .modal-hoja { border-radius: 14px; } }
+[data-estilo="barberia"] .modal-cab { border-bottom: 3px solid transparent; border-image: var(--poste) 1; }
+[data-estilo="barberia"] .toast { border-radius: 10px; }
+[data-estilo="barberia"] .toast-aviso { background: var(--carbon); box-shadow: inset 4px 0 0 var(--laton), 0 10px 24px rgba(0, 0, 0, .3); }
+[data-estilo="barberia"] .barras .b { border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--laton), #8a6420); }
+[data-estilo="barberia"] .logo-login { border-radius: 14px; box-shadow: 0 0 0 3px var(--laton), 0 10px 24px rgba(0, 0, 0, .2); animation: none; }
+[data-estilo="barberia"] .tarjeta-login { border-top: 6px solid transparent; border-image: var(--poste) 1; }
+[data-estilo="barberia"] .vacio .grande { animation: none; }
+[data-estilo="barberia"] .campana:has(.burbuja:not(.oculto)) { animation-duration: 4s; }
+
+/* Celebraciones en carbón y latón */
+[data-estilo="barberia"] .celebra-tarjeta,
+[data-estilo="barberia"] .celebracion-pago .celebra-tarjeta {
+  background: var(--carbon); border: 0; border-radius: 12px;
+  box-shadow: inset 0 -4px 0 var(--laton), 0 18px 40px rgba(0, 0, 0, .35);
+}
+[data-estilo="barberia"] .celebra-titulo { color: #fff; }
+[data-estilo="barberia"] .celebra-detalle, [data-estilo="barberia"] .celebracion-pago .celebra-detalle { color: var(--laton); }

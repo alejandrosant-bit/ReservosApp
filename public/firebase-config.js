@@ -22,3 +22,8 @@ export const vapidKey = "";
 // entrada (útil si vendes el sistema a varios negocios).
 // false = solo tú creas las cuentas en Firebase → Authentication.
 export const permitirRegistro = true;
+
+// Estilo de la pantalla de entrada para este despliegue:
+// "belleza" (spa, uñas, peluquería) o "barberia". Cada negocio igual
+// puede cambiarlo después en Ajustes → Mi negocio.
+export const estiloPorDefecto = "belleza";

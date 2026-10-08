@@ -3,7 +3,7 @@
 // servicios, profesionales, bot de WhatsApp y notificaciones.
 // ============================================================
 import { E, alCambiar, guardarConfig, guardar, borrar, nuevoId, sesion, db, doc, setDoc, deleteDoc, escribir, listarColeccion, lote } from "../datos.js";
-import { MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
+import { ESTILOS, estiloDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, campoMonto, leerMonto, montoATexto, sonar, descargar } from "../ui.js";
 import { prepararPush, probarNotificacion, pushDisponible } from "../notificaciones.js";
 import { colorProf } from "./agenda.js";
@@ -16,7 +16,7 @@ const SECCIONES = [
   ["pagos", "💳", "Métodos de pago y gastos", "Efectivo, Nequi, Pago móvil, Zelle…"],
   ["horario", "🕘", "Horario de atención", "Días, horas, descanso y feriados"],
   ["reglas", "📏", "Reglas de la agenda", "Intervalos, anticipación, cancelación"],
-  ["servicios", "💆", "Servicios", "Precios y duración"],
+  ["servicios", "✂️", "Servicios", "Precios y duración"],
   ["profesionales", "💇", "Profesionales", "Equipo, servicios y comisiones"],
   ["bot", "🤖", "Bot de WhatsApp", "Nombre del asistente y mensajes"],
   ["simulador", "🧪", "Probar el bot", "Chatea con tu bot aquí mismo"],
@@ -112,6 +112,9 @@ function seccionNegocio() {
         ${c.logo ? '<button type="button" class="btn-link peq" id="quitar-logo">Quitar logo</button>' : ""}</div>
       </div>
       <label>Nombre del negocio<input name="nombre" required value="${esc(c.nombre)}" /></label>
+      <label>Estilo de la app
+        <select name="estilo">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${k === (c.estilo || "belleza") ? "selected" : ""}>${e.nombre}</option>`).join("")}</select>
+        <span class="ayuda">Cambia colores, letras, íconos y el tono del bot de WhatsApp. La app funciona igual.</span></label>
       <label>Dirección<input name="direccion" value="${esc(c.direccion)}" placeholder="Cra 10 # 20-30, Bogotá" /></label>
       <div class="dos-col">
         <label>Teléfono del negocio<input name="telefono" inputmode="tel" value="${esc(c.telefono)}" /></label>
@@ -142,7 +145,16 @@ function seccionNegocio() {
       f.onsubmit = (ev) => {
         ev.preventDefault();
         const d = datosForm(f);
-        guardarConfig({ ...d, codigoPais: d.codigoPais.replace(/\D/g, ""), logo });
+        const cambios = { ...d, codigoPais: d.codigoPais.replace(/\D/g, ""), logo };
+        const anterior = c.estilo || "belleza";
+        if (d.estilo !== anterior) {
+          // Nuevo estilo: el bot adopta el tono nuevo y, si el color era
+          // el del estilo anterior, también cambia el color.
+          cambios.mensajes = { ...ESTILOS[d.estilo].mensajes };
+          if (d.colorPrimario === ESTILOS[anterior].color) cambios.colorPrimario = ESTILOS[d.estilo].color;
+          if (c.asistente === ESTILOS[anterior].asistente) cambios.asistente = ESTILOS[d.estilo].asistente;
+        }
+        guardarConfig(cambios);
         toast("Guardado ✅");
         cerrar();
       };
@@ -540,11 +552,12 @@ function seccionBot() {
     </form>`,
     onAbrir(cu, cerrar) {
       const f = cu.querySelector("#f");
-      cu.querySelectorAll("[data-reset]").forEach((b) => (b.onclick = () => (f[`m_${b.dataset.reset}`].value = MENSAJES_POR_DEFECTO[b.dataset.reset])));
+      const originales = estiloDe(c).mensajes;
+      cu.querySelectorAll("[data-reset]").forEach((b) => (b.onclick = () => (f[`m_${b.dataset.reset}`].value = originales[b.dataset.reset])));
       const leer = () => {
         const d = datosForm(f);
         const mensajes = {};
-        for (const k of Object.keys(ETIQUETAS_MENSAJES)) mensajes[k] = (d[`m_${k}`] || "").trim() || MENSAJES_POR_DEFECTO[k];
+        for (const k of Object.keys(ETIQUETAS_MENSAJES)) mensajes[k] = (d[`m_${k}`] || "").trim() || originales[k];
         return {
           botActivo: f.botActivo.checked,
           pedirCedula: f.pedirCedula.checked,
@@ -697,10 +710,13 @@ const PLANTILLAS = {
     ["Manicure", 45, 25000, "Uñas", "uñas, manos"],
   ],
   barberia: [
-    ["Corte clásico", 30, 25000, "Corte", "corte, pelo, cabello"],
-    ["Corte + barba", 45, 35000, "Corte", "barba, combo"],
-    ["Arreglo de barba", 20, 15000, "Barba", "barba, perfilado"],
-    ["Cejas", 15, 8000, "Extras", "cejas"],
+    ["Corte clásico", 30, 25000, "Corte", "corte, pelo, cabello, motilada"],
+    ["Fade / degradado", 40, 30000, "Corte", "fade, degradado, desvanecido, bajo"],
+    ["Corte + barba", 50, 40000, "Combo", "barba, combo, completo"],
+    ["Arreglo de barba", 20, 15000, "Barba", "barba, perfilado, contorno"],
+    ["Afeitado clásico con toalla caliente", 30, 25000, "Barba", "afeitado, rasurado, toalla"],
+    ["Diseño / líneas", 15, 10000, "Extras", "diseño, lineas, raya"],
+    ["Cejas", 10, 8000, "Extras", "cejas, ceja"],
   ],
   unas: [
     ["Manicure tradicional", 45, 20000, "Manos", "uñas, manos"],
@@ -720,26 +736,38 @@ const PAISES = {
 
 export function asistenteInicial() {
   abrirModal({
-    titulo: "¡Bienvenid@! Configuremos tu negocio",
+    titulo: "¡Hola! Configuremos tu negocio",
     html: `<form id="f">
       <p class="peq suave">Solo toma un minuto. Todo se puede cambiar después en Ajustes.</p>
       <label>Nombre del negocio<input name="nombre" required placeholder="Ej. Spa Luna" /></label>
       <label>Tipo de negocio<select name="tipo">
         <option value="spa">Spa / estética</option><option value="peluqueria">Peluquería / salón de belleza</option>
-        <option value="barberia">Barbería</option><option value="unas">Uñas / manicure</option></select></label>
+        <option value="barberia" ${document.documentElement.dataset.estilo === "barberia" ? "selected" : ""}>Barbería</option><option value="unas">Uñas / manicure</option></select></label>
       <label>País<select name="pais">${Object.entries(PAISES).map(([k, p]) => `<option value="${k}">${p.nombre}</option>`).join("")}</select></label>
-      <label>Nombre del asistente virtual (bot de WhatsApp)<input name="asistente" value="Sofi" /></label>
+      <label>Nombre del asistente virtual (bot de WhatsApp)<input name="asistente" id="asis-ini" value="${document.documentElement.dataset.estilo === "barberia" ? "Max" : "Sofi"}" /></label>
       <label class="check"><input type="checkbox" name="ejemplos" checked /> Crear servicios de ejemplo (luego ajustas precios)</label>
       <button class="btn btn-pri btn-bloque">Empezar 🚀</button>
     </form>`,
     onAbrir(cu, cerrar) {
+      const f0 = cu.querySelector("#f");
+      f0.tipo.addEventListener("change", () => {
+        const estilo = f0.tipo.value === "barberia" ? "barberia" : "belleza";
+        document.documentElement.dataset.estilo = estilo;
+        document.documentElement.style.setProperty("--pri", ESTILOS[estilo].color);
+        const asis = cu.querySelector("#asis-ini");
+        if (Object.values(ESTILOS).some((e) => e.asistente === asis.value)) asis.value = ESTILOS[estilo].asistente;
+      });
       cu.querySelector("#f").onsubmit = (ev) => {
         ev.preventDefault();
         const d = datosForm(ev.target);
         const p = PAISES[d.pais];
+        const estilo = d.tipo === "barberia" ? "barberia" : "belleza";
         guardarConfig({
           nombre: d.nombre.trim(),
-          asistente: d.asistente.trim() || "Sofi",
+          asistente: d.asistente.trim() || ESTILOS[estilo].asistente,
+          estilo,
+          colorPrimario: ESTILOS[estilo].color,
+          mensajes: { ...ESTILOS[estilo].mensajes },
           tipoNegocio: d.tipo,
           pais: d.pais,
           monedaPrincipal: p.moneda,
