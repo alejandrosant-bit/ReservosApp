@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&family=Oswald:wght@500;600&family=Barlow:wght@400;600;700;800&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&family=Oswald:wght@500;600&family=Barlow:wght@400;600;700;800&family=Comfortaa:wght@600;700&display=swap" />
 <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -31,24 +31,68 @@
   </div>
 </div>
 
+<!-- Isotipo de Reservo (taza + calendario), reutilizable con <use> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="iso-reservo" viewBox="0 0 64 64">
+    <rect x="2" y="2" width="60" height="60" rx="18" fill="#c9a98e"/>
+    <rect x="15" y="19" width="34" height="30" rx="7" fill="#fbf6f0"/>
+    <rect x="15" y="19" width="34" height="9" rx="4.5" fill="#8a6a55"/>
+    <rect x="22" y="14" width="5" height="10" rx="2.5" fill="#5b4033"/>
+    <rect x="37" y="14" width="5" height="10" rx="2.5" fill="#5b4033"/>
+    <path d="M24 38.5l5 5 11-11" fill="none" stroke="#5b4033" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+
 <!-- ===================== LOGIN ===================== -->
-<div id="vista-login" class="pantalla-centro oculto">
-  <div class="tarjeta-login">
-    <img src="./icon-192.png" alt="" class="logo-login" id="login-logo" />
-    <h1 id="login-titulo">Reservo</h1>
-    <p class="sub">Citas · Clientes · Caja · Bot de WhatsApp</p>
-    <form id="form-login" autocomplete="on">
-      <label>Correo<input id="login-email" type="email" required autocomplete="username" /></label>
-      <label>Clave<input id="login-clave" type="password" required minlength="6" autocomplete="current-password" /></label>
-      <p id="login-error" class="error"></p>
-      <button type="submit" class="btn btn-pri btn-bloque" id="login-boton">Entrar</button>
-    </form>
-    <div class="login-links">
-      <button type="button" class="btn-link" id="login-olvido">¿Olvidaste tu clave?</button>
-      <button type="button" class="btn-link oculto" id="login-cambiar">¿No tienes cuenta? Crear una</button>
+<div id="vista-login" class="login oculto">
+  <section class="login-marca" aria-label="Reservo">
+    <div class="reservo-logo">
+      <svg class="reservo-iso" aria-hidden="true"><use href="#iso-reservo"/></svg>
+      <span class="reservo-palabra">reservo</span><span class="reservo-sello" id="reservo-sello"></span>
     </div>
-    <p class="nota">La primera vez necesitas internet. Después la sesión queda guardada y la app funciona sin conexión.</p>
-  </div>
+    <h1 class="login-lema">Tu agenda, tus clientes y tu caja, en un solo lugar.</h1>
+    <ul class="login-puntos">
+      <li><span aria-hidden="true">💬</span> El bot de WhatsApp agenda por ti, día y noche</li>
+      <li><span aria-hidden="true">💵</span> Caja con arqueo en pesos, dólares o bolívares</li>
+      <li><span aria-hidden="true">📴</span> Sigue funcionando aunque se vaya el internet</li>
+    </ul>
+  </section>
+
+  <section class="login-panel">
+    <div class="tarjeta-login">
+      <div class="login-negocio oculto" id="login-negocio">
+        <img src="./icon-192.png" alt="" class="logo-login" id="login-logo" />
+        <span id="login-titulo"></span>
+      </div>
+      <h2 id="login-encabezado">Hola de nuevo</h2>
+      <p class="sub" id="login-sub">Entra para ver tu agenda de hoy.</p>
+
+      <div class="login-pestanas oculto" id="login-pestanas" role="tablist">
+        <button type="button" role="tab" class="sel" id="tab-entrar" aria-selected="true">Entrar</button>
+        <button type="button" role="tab" id="tab-crear" aria-selected="false">Crear cuenta</button>
+      </div>
+
+      <form id="form-login" autocomplete="on" novalidate>
+        <label>Correo
+          <input id="login-email" type="email" required autocomplete="username" placeholder="tu@correo.com" inputmode="email" />
+        </label>
+        <label>Clave
+          <span class="campo-clave">
+            <input id="login-clave" type="password" required minlength="6" autocomplete="current-password" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="ver-clave" id="ver-clave" aria-label="Mostrar clave" aria-pressed="false">👁️</button>
+          </span>
+        </label>
+        <p id="login-error" class="error" role="alert"></p>
+        <button type="submit" class="btn btn-reservo btn-bloque" id="login-boton"><span class="btn-texto">Entrar</span><span class="btn-cargando" aria-hidden="true"></span></button>
+      </form>
+      <div class="login-links">
+        <button type="button" class="btn-link" id="login-olvido">¿Olvidaste tu clave?</button>
+        <button type="button" class="btn-link oculto" id="login-cambiar">¿No tienes cuenta? Crear una</button>
+      </div>
+      <p class="nota">La primera vez necesitas internet. Después la sesión queda guardada y la app funciona sin conexión.</p>
+    </div>
+    <p class="login-pie">hecho con ☕ por <b>reservo</b></p>
+  </section>
 </div>
 
 <!-- ===================== APP ===================== -->
@@ -79,6 +123,10 @@
       </div>
     </header>
     <main id="contenido"></main>
+  </div>
+  <div class="marca-agua" aria-label="Hecho con Reservo">
+    <svg class="reservo-iso" aria-hidden="true"><use href="#iso-reservo"/></svg>
+    <span>hecho con <b>reservo</b></span>
   </div>
 </div>
 

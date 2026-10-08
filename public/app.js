@@ -35,37 +35,73 @@ if ("serviceWorker" in navigator) {
 let modoRegistro = false;
 function prepararLogin() {
   const cambiar = $("#login-cambiar");
-  if (cfgFirebase.permitirRegistro) cambiar.classList.remove("oculto");
-  cambiar.onclick = () => {
-    modoRegistro = !modoRegistro;
-    $("#login-boton").textContent = modoRegistro ? "Crear cuenta" : "Entrar";
-    cambiar.textContent = modoRegistro ? "¿Ya tienes cuenta? Entrar" : "¿No tienes cuenta? Crear una";
-    $("#login-clave").autocomplete = modoRegistro ? "new-password" : "current-password";
+  const pestanas = $("#login-pestanas");
+  const boton = $("#login-boton");
+  const error = $("#login-error");
+  const clave = $("#login-clave");
+
+  const ponerModo = (registro) => {
+    modoRegistro = registro;
+    boton.querySelector(".btn-texto").textContent = registro ? "Crear mi cuenta" : "Entrar";
+    $("#login-encabezado").textContent = registro ? "Crea tu cuenta" : "Hola de nuevo";
+    $("#login-sub").textContent = registro ? "En un minuto configuras tu negocio." : "Entra para ver tu agenda de hoy.";
+    cambiar.textContent = registro ? "¿Ya tienes cuenta? Entrar" : "¿No tienes cuenta? Crear una";
+    clave.autocomplete = registro ? "new-password" : "current-password";
+    $("#login-olvido").classList.toggle("oculto", registro);
+    $("#tab-entrar").classList.toggle("sel", !registro);
+    $("#tab-crear").classList.toggle("sel", registro);
+    $("#tab-entrar").setAttribute("aria-selected", String(!registro));
+    $("#tab-crear").setAttribute("aria-selected", String(registro));
+    error.textContent = "";
   };
+  if (cfgFirebase.permitirRegistro) {
+    cambiar.classList.remove("oculto");
+    pestanas.classList.remove("oculto");
+  }
+  cambiar.onclick = () => ponerModo(!modoRegistro);
+  $("#tab-entrar").onclick = () => ponerModo(false);
+  $("#tab-crear").onclick = () => ponerModo(true);
+
+  $("#ver-clave").onclick = () => {
+    const ver = clave.type === "password";
+    clave.type = ver ? "text" : "password";
+    $("#ver-clave").setAttribute("aria-pressed", String(ver));
+    $("#ver-clave").setAttribute("aria-label", ver ? "Ocultar clave" : "Mostrar clave");
+    $("#ver-clave").textContent = ver ? "🙈" : "👁️";
+    clave.focus();
+  };
+
   $("#login-olvido").onclick = async () => {
     const email = $("#login-email").value.trim();
-    if (!email) return ($("#login-error").textContent = "Escribe tu correo y vuelve a tocar “¿Olvidaste tu clave?”.");
+    if (!email) return (error.textContent = "Escribe tu correo arriba y vuelve a tocar “¿Olvidaste tu clave?”.");
     try {
       await sesion.recuperar(email);
       toast("Te enviamos un correo para cambiar la clave 📧");
     } catch (e) {
-      $("#login-error").textContent = traducirError(e);
+      error.textContent = traducirError(e);
     }
   };
+
   $("#form-login").onsubmit = async (ev) => {
     ev.preventDefault();
-    const btn = $("#login-boton");
-    btn.disabled = true;
-    $("#login-error").textContent = "";
+    error.textContent = "";
+    const email = $("#login-email").value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return (error.textContent = "Revisa el correo, parece incompleto.");
+    if (clave.value.length < 6) return (error.textContent = "La clave debe tener al menos 6 caracteres.");
+    if (!navigator.onLine) return (error.textContent = "Sin internet. La primera vez necesitas conexión para entrar.");
+    boton.disabled = true;
+    boton.classList.add("cargando");
     try {
-      const email = $("#login-email").value.trim();
-      const clave = $("#login-clave").value;
-      if (modoRegistro) await sesion.registrar(email, clave);
-      else await sesion.entrar(email, clave);
+      if (modoRegistro) await sesion.registrar(email, clave.value);
+      else await sesion.entrar(email, clave.value);
     } catch (e) {
-      $("#login-error").textContent = traducirError(e);
+      error.textContent = traducirError(e);
+      $(".tarjeta-login").classList.remove("sacudir");
+      void $(".tarjeta-login").offsetWidth;
+      $(".tarjeta-login").classList.add("sacudir");
     } finally {
-      btn.disabled = false;
+      boton.disabled = false;
+      boton.classList.remove("cargando");
     }
   };
 }
@@ -206,8 +242,8 @@ function aplicarEstilo(estilo) {
   });
   const login = $("#login-logo");
   if (login && !login.dataset.propio) login.src = icono;
-  const titulo = $("#login-titulo");
-  if (titulo && !titulo.dataset.propio) titulo.textContent = barberia ? "Reservo Barber" : "Reservo";
+  const sello = $("#reservo-sello");
+  if (sello) sello.textContent = barberia ? "barber" : "";
 }
 aplicarEstilo(ESTILO_DESPLIEGUE);
 
@@ -235,6 +271,7 @@ function marcaGuardada() {
     if (m.nombre) {
       $("#login-titulo").textContent = m.nombre;
       $("#login-titulo").dataset.propio = "1";
+      $("#login-negocio").classList.remove("oculto");
       $$("[data-nombre-negocio]").forEach((el) => (el.textContent = m.nombre));
     }
     if (m.logo) {

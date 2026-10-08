@@ -689,3 +689,104 @@ main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--su
 .fondo-libre input[type="color"] { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .12); cursor: pointer; }
 .fondo-libre input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .fondo-libre input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+
+/* ============================================================
+   Marca Reservo (café pastel). Es la identidad del producto, no
+   del negocio: no cambia con el estilo ni con los colores que
+   elija cada negocio.
+   ============================================================ */
+:root {
+  --reservo-cacao: #5b4033;
+  --reservo-cafe: #8a6a55;
+  --reservo-latte: #c9a98e;
+  --reservo-crema: #f3e7da;
+  --reservo-espuma: #fbf6f0;
+  --reservo-caramelo: #b9875e;
+  --fuente-reservo: "Comfortaa", "Nunito", -apple-system, "Segoe UI", sans-serif;
+}
+.reservo-iso { width: 1em; height: 1em; flex: none; }
+.reservo-logo { display: inline-flex; align-items: center; gap: 12px; }
+.reservo-logo .reservo-iso { font-size: 46px; filter: drop-shadow(0 6px 14px rgba(91, 64, 51, .22)); }
+.reservo-palabra { font-family: var(--fuente-reservo); font-weight: 700; font-size: 34px; letter-spacing: -0.02em; color: var(--reservo-cacao); }
+.reservo-sello:not(:empty) {
+  font-family: var(--fuente-reservo); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--reservo-espuma); background: var(--reservo-cafe); padding: 3px 8px; border-radius: 999px; align-self: flex-start; margin-top: 6px;
+}
+
+/* ---------- Pantalla de entrada ---------- */
+.login {
+  min-height: 100vh; display: grid; grid-template-columns: 1fr;
+  background: var(--reservo-espuma); color: var(--reservo-cacao);
+}
+.login-marca {
+  padding: calc(env(safe-area-inset-top) + 28px) 22px 34px;
+  background:
+    radial-gradient(420px 260px at 85% 15%, rgba(255, 255, 255, .55), transparent 70%),
+    radial-gradient(520px 320px at 0% 100%, rgba(185, 135, 94, .28), transparent 70%),
+    linear-gradient(160deg, var(--reservo-crema), #e8d5c3);
+  display: flex; flex-direction: column; gap: 16px;
+  border-radius: 0 0 32px 32px;
+}
+.login-lema { font-family: var(--fuente-reservo); font-weight: 700; font-size: 24px; line-height: 1.3; color: var(--reservo-cacao); text-wrap: balance; max-width: 22ch; margin: 0; }
+.login-puntos { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-weight: 700; color: var(--reservo-cafe); font-size: 14px; }
+.login-puntos li { display: flex; gap: 10px; align-items: center; }
+.login-puntos li span { width: 30px; height: 30px; border-radius: 10px; background: rgba(255, 255, 255, .7); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.login-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 22px 16px 28px; }
+.login .tarjeta-login {
+  width: 100%; max-width: 400px; text-align: left; border-radius: 26px; border: 1px solid #ecdccd;
+  background: #fff; box-shadow: 0 2px 6px rgba(91, 64, 51, .06), 0 18px 40px rgba(91, 64, 51, .12);
+  padding: 24px 22px; animation: sube-resorte .5s var(--rebote);
+}
+.login .tarjeta-login h2 { font-family: var(--fuente-reservo); font-size: 24px; color: var(--reservo-cacao); text-transform: none; letter-spacing: -0.01em; }
+.login .sub { color: var(--reservo-cafe); margin: 4px 0 14px; }
+.login label { color: var(--reservo-cafe); }
+.login input { border-color: #e6d6c6; background: var(--reservo-espuma); color: var(--reservo-cacao); border-radius: 14px; }
+.login input:focus { border-color: var(--reservo-caramelo); box-shadow: 0 0 0 4px rgba(185, 135, 94, .22); }
+.login-negocio { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 8px 10px; border-radius: 14px; background: var(--reservo-espuma); font-weight: 800; color: var(--reservo-cacao); }
+.login .logo-login { width: 36px; height: 36px; border-radius: 10px; box-shadow: none; animation: none; }
+.login-pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--reservo-crema); margin-bottom: 4px; }
+.login-pestanas button { border: 0; border-radius: 11px; padding: 9px; font: inherit; font-weight: 800; color: var(--reservo-cafe); background: none; cursor: pointer; transition: background .2s, color .2s, transform .2s var(--rebote); }
+.login-pestanas button.sel { background: #fff; color: var(--reservo-cacao); box-shadow: 0 2px 8px rgba(91, 64, 51, .12); }
+.login-pestanas button:active { transform: scale(.96); }
+.campo-clave { position: relative; display: block; }
+.campo-clave input { padding-right: 48px; }
+.ver-clave { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; font-size: 18px; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; }
+.ver-clave:hover { background: var(--reservo-crema); }
+.btn-reservo {
+  background: linear-gradient(135deg, var(--reservo-cafe), var(--reservo-cacao)); color: #fff; margin-top: 4px;
+  box-shadow: 0 8px 18px rgba(91, 64, 51, .28); border-radius: 999px; text-transform: none !important; letter-spacing: 0 !important; font-size: 16px !important;
+}
+.btn-reservo:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(91, 64, 51, .32); }
+.btn-reservo .btn-cargando { display: none; width: 18px; height: 18px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .4); border-top-color: #fff; animation: gira .7s linear infinite; }
+.btn-reservo.cargando .btn-texto { opacity: .7; }
+.btn-reservo.cargando .btn-cargando { display: inline-block; }
+.login .btn-link { color: var(--reservo-caramelo); font-weight: 700; }
+.login .error { min-height: 1.2em; }
+.login .nota { color: #9c8576; text-align: center; }
+.login-pie { font-family: var(--fuente-reservo); font-size: 13px; color: var(--reservo-cafe); margin: 0; }
+.login-pie b { color: var(--reservo-cacao); }
+.sacudir { animation: sacudir .4s ease !important; }
+@keyframes sacudir { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+@media (min-width: 900px) {
+  .login { grid-template-columns: minmax(380px, 46%) 1fr; }
+  .login-marca { border-radius: 0 40px 40px 0; justify-content: center; padding: 48px 56px; gap: 24px; }
+  .login-lema { font-size: 34px; }
+  .login-puntos { font-size: 16px; gap: 12px; }
+}
+/* La marca Reservo no se viste de barbería: siempre café pastel */
+[data-estilo="barberia"] .login .tarjeta-login { border-top: 1px solid #ecdccd; border-image: none; }
+[data-estilo="barberia"] .login h2 { font-family: var(--fuente-reservo); }
+
+/* ---------- Marca de agua "hecho con reservo" ---------- */
+.marca-agua {
+  position: fixed; z-index: 24; left: 12px; bottom: calc(76px + env(safe-area-inset-bottom));
+  display: inline-flex; align-items: center; gap: 6px; pointer-events: none; user-select: none;
+  padding: 4px 10px 4px 5px; border-radius: 999px;
+  background: rgba(243, 231, 218, .92); border: 1px solid #e6d3c1; box-shadow: 0 4px 12px rgba(91, 64, 51, .12);
+  font-family: var(--fuente-reservo); font-size: 11px; color: var(--reservo-cafe); letter-spacing: .01em;
+}
+.marca-agua .reservo-iso { font-size: 18px; }
+.marca-agua b { color: var(--reservo-cacao); font-weight: 700; }
+@media (min-width: 900px) { .marca-agua { bottom: 18px; left: 18px; font-size: 12px; } }
+@media print { .marca-agua { display: flex !important; position: static; margin-top: 16px; } }
+:root[data-estilo] .login .login-lema, :root[data-estilo] .login h2 { text-transform: none; letter-spacing: -0.01em; font-family: var(--fuente-reservo); }
