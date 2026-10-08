@@ -21,6 +21,7 @@ import {
   normalizar,
   rellenar,
   ESTADOS_QUE_OCUPAN,
+  citasEnConflicto,
 } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales } from "../ui.js";
 import { cobrarCita, deshacerCobro } from "./cobro.js";
@@ -66,6 +67,8 @@ function citasDelDia(f) {
   return E.citas.filter((c) => c.fecha === f).sort((a, b) => a.hora.localeCompare(b.hora));
 }
 
+let enConflicto = new Set();
+
 function tarjetaCita(c) {
   const prof = E.profesionales.find((p) => p.id === c.profesionalId);
   const color = prof ? colorProf(prof, E.profesionales.indexOf(prof)) : E.servicios.find((s) => s.id === c.servicioId)?.color || "var(--pri)";
@@ -80,6 +83,7 @@ function tarjetaCita(c) {
     <div class="fila" style="flex-direction:column;align-items:flex-end;gap:4px">
       <span class="chip chip-${c.estado}">${ESTADOS[c.estado] || c.estado}</span>
       ${c.origen === "whatsapp" ? '<span class="chip chip-wa">WhatsApp</span>' : ""}
+      ${enConflicto.has(c.id) ? '<span class="chip chip-cruce" title="Hay otra cita a la misma hora">⚠️ Cruce</span>' : ""}
     </div>
   </div>`;
 }
@@ -90,6 +94,7 @@ function pintar() {
   const lunes = inicioSemana(fecha);
   const semana = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
   const citas = citasDelDia(fecha);
+  enConflicto = citasEnConflicto(citas, E.config, E.profesionales);
   const activas = citas.filter((c) => c.estado !== "cancelada");
   const base = E.config.monedaPrincipal;
   const cobrado = E.movimientos.filter((m) => m.fecha === fecha && m.tipo === "ingreso").reduce((s, m) => s + (Number(m.montoBase) || 0), 0);
@@ -150,6 +155,11 @@ function pintar() {
       <div class="kpi"><div class="v">${formatoMoneda(porCobrar, base)}</div><div class="t">Por cobrar</div></div>
       <div class="kpi"><div class="v">${formatoMoneda(cobrado, base)}</div><div class="t">Cobrado</div></div>
     </div>
+    ${
+      enConflicto.size
+        ? `<div class="tarjeta aviso-cruce" role="alert">⚠️ <b>${enConflicto.size} citas se cruzan</b> en el mismo horario. Toca una para moverla a otra hora o asignarla a otra persona.</div>`
+        : ""
+    }
     ${cuerpo}
     ${
       libres.length && horario
@@ -211,6 +221,7 @@ export function detalleCita(id) {
         ${c.estado === "completada" ? `<div class="positivo">💵 Cobrado: ${formatoMoneda(c.pagadoBase, base)}</div>` : ""}
         ${c.notas ? `<div>📝 ${esc(c.notas)}</div>` : ""}
         ${cliente?.notas ? `<div class="peq" style="margin-top:6px;background:var(--alerta-suave);padding:6px 8px;border-radius:8px">⚠️ Notas del cliente: ${esc(cliente.notas)}</div>` : ""}
+        ${citasEnConflicto(E.citas.filter((x) => x.fecha === c.fecha), E.config, E.profesionales).has(c.id) ? `<div class="peq" style="margin-top:6px;background:var(--error-suave);color:var(--error);padding:6px 8px;border-radius:8px">⚠️ Esta cita se cruza con otra a la misma hora. Usa “Editar / mover”.</div>` : ""}
       </div>
       <div class="fila-botones" style="justify-content:stretch">
         ${abierta ? '<button class="btn btn-ok" data-acc="cobrar">💵 Cobrar</button>' : ""}
@@ -462,7 +473,7 @@ export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clien
           if (existente) cliente = existente;
           else {
             clienteId = nuevoId("clientes");
-            cliente = datosCliente({ nombre, cedula: d.cedula || "", telefono: d.telefono || "", origen: "app", visitas: 0, totalGastado: 0, creado: serverTimestamp() });
+            cliente = datosCliente({ nombre, cedula: d.cedula || "", telefono: d.telefono || "", origen: "app", visitas: 0, totalGastado: 0, creado: serverTimestamp(), creadoMs: Date.now() });
             guardar("clientes", clienteId, cliente, false);
             cliente = { id: clienteId, ...cliente };
           }

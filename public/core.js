@@ -249,6 +249,27 @@ export function profesionalesLibres({ fecha, inicio, duracion, servicioId, citas
   return Array.from({ length: Math.max(0, libres) }, (_, i) => ({ id: "", nombre: "", virtual: i }));
 }
 
+// Citas que se cruzan (sobrecupo): con profesionales, dos citas del
+// mismo profesional a la vez; sin profesionales, más citas simultáneas
+// que la capacidad. Devuelve un Set con los ids en conflicto.
+export function citasEnConflicto(citas, config, profesionales) {
+  const conflicto = new Set();
+  const activas = (citas || []).filter((c) => ["pendiente", "confirmada"].includes(c.estado || "pendiente"));
+  const conProfes = (profesionales || []).some((p) => p.activo !== false);
+  const capacidad = Math.max(1, Number(config?.capacidad) || 1);
+  const porDia = {};
+  activas.forEach((c) => (porDia[c.fecha] ||= []).push(c));
+  for (const lista of Object.values(porDia)) {
+    for (const a of lista) {
+      const ini = aMinutos(a.hora);
+      const fin = ini + (Number(a.duracion) || 30);
+      const cruces = lista.filter((b) => b !== a && seCruzan(ini, fin, aMinutos(b.hora), aMinutos(b.hora) + (Number(b.duracion) || 30)));
+      if (conProfes ? cruces.some((b) => a.profesionalId && b.profesionalId === a.profesionalId) : cruces.length + 1 > capacidad) conflicto.add(a.id);
+    }
+  }
+  return conflicto;
+}
+
 // Horas disponibles para un servicio en una fecha.
 export function horasDisponibles({ fecha, servicio, citas, profesionales, config, ahora }) {
   const h = horarioDelDia(config, fecha);

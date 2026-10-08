@@ -96,6 +96,9 @@ try {
   await page.waitForTimeout(300);
   ok((await page.$$(".cita")).length === 1, "la cita aparece en la agenda");
   ok((await page.evaluate(() => window.__agenda.E.clientes.length)) === 1, "cliente creado");
+  await page.waitForSelector(".celebracion-cliente", { timeout: 3000 });
+  ok((await page.textContent(".celebracion-cliente")).includes("María"), "celebración de cliente nuevo");
+  await foto("celebra-cliente");
   await foto("agenda-con-cita");
 
   // 3) Cobrar (pide abrir caja primero) con pago mixto USD + VES
@@ -113,6 +116,10 @@ try {
   const movs = await page.evaluate(() => window.__agenda.E.movimientos.map((m) => [m.moneda, m.monto, m.metodo]));
   ok(movs.length === 2 && movs.some((m) => m[0] === "VES"), "pago mixto USD + VES registrado " + JSON.stringify(movs));
   ok((await page.evaluate(() => window.__agenda.E.citas[0].estado)) === "completada", "cita marcada como cobrada");
+  await page.waitForSelector(".celebracion-pago", { timeout: 3000 });
+  const textoPago = await page.textContent(".celebracion-pago");
+  ok(textoPago.includes("Pago recibido") && textoPago.includes("US$ 6"), "una sola celebración con el total del pago mixto: " + textoPago.trim().replace(/\s+/g, " "));
+  await foto("celebra-pago");
 
   // 4) Caja: gasto y cierre con arqueo
   await page.click('a[data-tab="caja"]');
@@ -191,6 +198,38 @@ try {
   await page.click('a[data-tab="agenda"]');
   await page.waitForTimeout(300);
   await foto("escritorio-agenda");
+
+  // 10) Prueba "mono": cientos de toques al azar por toda la app
+  await page.setViewportSize({ width: 390, height: 844 });
+  await ctx.route(/wa\.me|facebook\.com|developers\./, (r) => r.abort());
+  ctx.on("page", (p) => p.close().catch(() => {})); // enlaces externos
+  let toques = 0;
+  const azar = (n) => Math.floor(Math.random() * n);
+  for (let i = 0; i < 400; i++) {
+    if (i % 60 === 0) {
+      const tabs = ["agenda", "clientes", "caja", "reportes", "ajustes"];
+      await page.click(`a[data-tab="${tabs[azar(5)]}"]`, { force: true }).catch(() => {});
+    }
+    if (azar(12) === 0) await page.keyboard.press("Escape");
+    const candidatos = await page.$$("button:visible, a[data-tab]:visible, [data-cita]:visible, .item:visible, input:visible, select:visible");
+    if (!candidatos.length) continue;
+    const el = candidatos[azar(candidatos.length)];
+    const info = await el.evaluate((n) => ({ tag: n.tagName, tipo: n.type, texto: n.textContent || "", id: n.id }));
+    if (/Cerrar sesión|salir/i.test(info.texto) || info.id === "salir") continue;
+    try {
+      if (info.tag === "INPUT" && !["checkbox", "radio", "file", "color"].includes(info.tipo)) {
+        await el.fill(["", "ana", "150000", "2026-10-09", "15:00", "x".repeat(40)][azar(6)], { timeout: 500 });
+      } else if (info.tag === "SELECT") {
+        const ops = await el.$$eval("option", (o) => o.map((x) => x.value));
+        if (ops.length) await el.selectOption(ops[azar(ops.length)], { timeout: 500 });
+      } else {
+        await el.click({ timeout: 500 });
+      }
+      toques++;
+    } catch {}
+    await page.waitForTimeout(15);
+  }
+  ok(toques > 100, `prueba mono: ${toques} toques al azar`);
 
   ok(!errores.length, "sin errores de JavaScript" + (errores.length ? ":\n" + errores.join("\n") : ""));
   console.log("\nTODO OK");

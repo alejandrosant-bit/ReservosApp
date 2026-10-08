@@ -3,9 +3,9 @@
 // ============================================================
 import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, actualizar } from "./datos.js";
 import { permitirRegistro } from "./firebase-config.js";
-import { $, $$, esc, toast, sonar, abrirModal } from "./ui.js";
+import { $, $$, esc, toast, sonar, abrirModal, celebrar } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
-import { hora12 } from "./core.js";
+import { hora12, formatoMoneda } from "./core.js";
 
 const VISTAS = {
   agenda: () => import("./vistas/agenda.js"),
@@ -95,12 +95,26 @@ async function navegar() {
   if (nombre !== nombreVista) {
     vistaActual?.desmontar?.();
     cont.innerHTML = '<div class="pantalla-centro" style="min-height:40vh"><div class="spinner"></div></div>';
-    const mod = await VISTAS[nombre]();
-    nombreVista = nombre;
-    vistaActual = mod.montar(cont, params) || {};
+    try {
+      const mod = await VISTAS[nombre]();
+      nombreVista = nombre;
+      vistaActual = mod.montar(cont, params) || {};
+    } catch (e) {
+      // Sin internet y sin esa pantalla guardada, o un error inesperado:
+      // se muestra un aviso con botón para reintentar en vez de romperse.
+      console.error(e);
+      nombreVista = null;
+      vistaActual = null;
+      cont.innerHTML = `<div class="tarjeta vacio"><span class="grande">🌧️</span>No se pudo abrir esta sección.<br>Revisa la conexión e intenta de nuevo.<br><br><button class="btn btn-pri" id="reintentar">Reintentar</button></div>`;
+      cont.querySelector("#reintentar").onclick = navegar;
+    }
     window.scrollTo(0, 0);
   } else {
-    vistaActual?.parametros?.(params);
+    try {
+      vistaActual?.parametros?.(params);
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
 window.addEventListener("hashchange", navegar);
@@ -109,8 +123,66 @@ alCambiar((que) => {
   if (que === "sync") return pintarSync();
   if (que === "avisos") pintarAvisos();
   if (que === "config") aplicarMarca();
-  vistaActual?.actualizar?.(que);
+  try {
+    vistaActual?.actualizar?.(que);
+  } catch (e) {
+    console.error(e);
+    // Si una pantalla falla al refrescarse, se vuelve a montar limpia
+    nombreVista = null;
+    navegar();
+  }
 });
+
+// ------------------------------------------------------------
+// Red de seguridad: cualquier error inesperado se registra y se
+// muestra un aviso amable (como máximo uno cada 10 s), sin dejar
+// la pantalla en blanco ni congelada.
+// ------------------------------------------------------------
+let ultimoAvisoError = 0;
+function errorInesperado(err) {
+  console.error("Error inesperado:", err);
+  const msg = String(err?.message || err || "");
+  // Errores del navegador o de extensiones que no afectan la app
+  if (/ResizeObserver|Script error|extension:\/\//i.test(msg)) return;
+  if (Date.now() - ultimoAvisoError < 10000) return;
+  ultimoAvisoError = Date.now();
+  toast("Algo no salió como esperábamos. Tus datos están a salvo; intenta de nuevo.", "error", 5000);
+}
+window.addEventListener("error", (e) => errorInesperado(e.error || e.message));
+window.addEventListener("unhandledrejection", (e) => {
+  e.preventDefault();
+  errorInesperado(e.reason);
+});
+
+// ------------------------------------------------------------
+// Celebraciones: pagos que entran y clientes nuevos (de este
+// teléfono, de otro dispositivo o del bot de WhatsApp)
+// ------------------------------------------------------------
+let pagosPendientes = [];
+let temporizadorPagos = null;
+function alNuevoMovimiento(m) {
+  if (m.tipo !== "ingreso") return;
+  // Un cobro puede llegar en varias partes (ej. dólares + pago móvil):
+  // se agrupan para celebrar una sola vez con el total.
+  pagosPendientes.push(m);
+  clearTimeout(temporizadorPagos);
+  temporizadorPagos = setTimeout(() => {
+    const total = pagosPendientes.reduce((t, x) => t + (Number(x.montoBase) || 0), 0);
+    const quien = pagosPendientes.find((x) => x.concepto)?.concepto.split(" — ")[1] || "";
+    pagosPendientes = [];
+    if (total <= 0) return;
+    celebrar({ tipo: "pago", icono: "💸", titulo: "¡Pago recibido!", detalle: `${formatoMoneda(total, E.config.monedaPrincipal)}${quien ? " · " + quien : ""}` });
+  }, 700);
+}
+function alNuevoCliente(c) {
+  const nombre = String(c.nombre || "").split(" ")[0];
+  celebrar({
+    tipo: "cliente",
+    icono: c.origen === "whatsapp" ? "💬" : "🌸",
+    titulo: "¡Nuevo cliente!",
+    detalle: `${nombre ? "Bienvenid@, " + nombre : "Bienvenid@"}${c.origen === "whatsapp" ? " · llegó por WhatsApp" : ""}`,
+  });
+}
 
 // ------------------------------------------------------------
 // Marca del negocio (nombre, color, logo)
@@ -229,7 +301,7 @@ if (!configurado) {
   sesion.observar((user) => {
     if (user) {
       E.usuario = user;
-      iniciarDatos(user.uid, { alNuevoAviso });
+      iniciarDatos(user.uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimiento });
       mostrar("vista-app");
       aplicarMarca();
       pintarSync();

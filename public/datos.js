@@ -103,7 +103,13 @@ export const nuevoId = (nombre) => doc(col(nombre)).id;
 export const sync = {
   enLinea: navigator.onLine,
   pendientes: 0,
-  ultima: Number(localStorage.getItem("ultimaSync") || 0),
+  ultima: (() => {
+    try {
+      return Number(localStorage.getItem("ultimaSync") || 0);
+    } catch {
+      return 0;
+    }
+  })(),
 };
 
 function marcarSincronizado() {
@@ -188,12 +194,32 @@ let desuscribir = [];
 
 const aLista = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-function escuchar(q, nombre, transformar = (x) => x) {
+// Momento en que abrió la app: solo se celebran registros creados
+// después (con un margen por si el reloj del servidor va adelantado).
+const ARRANQUE = Date.now() - 60000;
+
+function escuchar(q, nombre, transformar = (x) => x, alAgregar = null) {
+  const conocidos = new Set();
   return onSnapshot(
     q,
     { includeMetadataChanges: true },
     (snap) => {
-      E[nombre] = transformar(aLista(snap));
+      const lista = aLista(snap);
+      if (alAgregar) {
+        for (const d of lista) {
+          if (conocidos.has(d.id)) continue;
+          conocidos.add(d.id);
+          // Un registro viejo que llega tarde desde la nube no se celebra
+          if (E.cargado[nombre] && Number(d.creadoMs) >= ARRANQUE) {
+            try {
+              alAgregar(d);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+      }
+      E[nombre] = transformar(lista);
       E.cargado[nombre] = true;
       if (!snap.metadata.fromCache && !snap.metadata.hasPendingWrites) marcarSincronizado();
       avisar(nombre);
@@ -202,9 +228,10 @@ function escuchar(q, nombre, transformar = (x) => x) {
   );
 }
 
-export function iniciarDatos(uid, { alNuevoAviso } = {}) {
+export function iniciarDatos(uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimiento } = {}) {
   detenerDatos();
   E.uid = uid;
+  E.cargado = {};
   const h = ahoraEnZona(E.config.zonaHoraria).fecha;
   // En memoria: desde el 1 del mes anterior en adelante. Los
   // reportes de fechas más antiguas se consultan aparte.
@@ -220,9 +247,9 @@ export function iniciarDatos(uid, { alNuevoAviso } = {}) {
   const porNombre = (a, b) => (a.orden ?? 99) - (b.orden ?? 99) || String(a.nombre).localeCompare(String(b.nombre));
   desuscribir.push(escuchar(col("servicios"), "servicios", (l) => l.sort(porNombre)));
   desuscribir.push(escuchar(col("profesionales"), "profesionales", (l) => l.sort(porNombre)));
-  desuscribir.push(escuchar(col("clientes"), "clientes", (l) => l.sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)))));
+  desuscribir.push(escuchar(col("clientes"), "clientes", (l) => l.sort((a, b) => String(a.nombre).localeCompare(String(b.nombre))), alNuevoCliente));
   desuscribir.push(escuchar(query(col("citas"), where("fecha", ">=", E.desdeCargado)), "citas"));
-  desuscribir.push(escuchar(query(col("movimientos"), where("fecha", ">=", E.desdeCargado)), "movimientos"));
+  desuscribir.push(escuchar(query(col("movimientos"), where("fecha", ">=", E.desdeCargado)), "movimientos", undefined, alNuevoMovimiento));
   desuscribir.push(escuchar(query(col("cajas"), orderBy("abiertaMs", "desc"), limit(120)), "cajas"));
 
   // Avisos (los escribe el bot): suenan solo los que llegan

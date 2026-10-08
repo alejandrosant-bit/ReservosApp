@@ -71,6 +71,7 @@ export async function crearStoreFirestore(negocioId) {
         visitas: 0,
         totalGastado: 0,
         creado: FieldValue.serverTimestamp(),
+        creadoMs: Date.now(),
       });
       cacheClientes = null;
       return ref.id;
@@ -83,8 +84,15 @@ export async function crearStoreFirestore(negocioId) {
 
     // Crea la cita dentro de una transacción: si dos personas piden
     // la misma hora al mismo tiempo, solo una la obtiene.
+    // Además de leer las citas del día, la transacción lee y escribe un
+    // "candado" por día (bloqueos/{fecha}). Dos reservas simultáneas
+    // para el mismo día chocan en ese documento: Firestore repite la
+    // segunda, que vuelve a leer las citas, ve la hora ya tomada y
+    // devuelve null (el bot ofrece otras horas).
     async crearCita(cita) {
       return db.runTransaction(async (tx) => {
+        const candado = raiz.collection("bloqueos").doc(cita.fecha);
+        await tx.get(candado);
         const delDia = docs(await tx.get(raiz.collection("citas").where("fecha", "==", cita.fecha)));
         const libres = profesionalesLibres({
           fecha: cita.fecha,
@@ -101,7 +109,8 @@ export async function crearStoreFirestore(negocioId) {
           cita.profesionalNombre = libres[0].nombre || "";
         }
         const ref = raiz.collection("citas").doc();
-        tx.set(ref, { ...cita, creado: FieldValue.serverTimestamp(), recordatorioEnviado: false });
+        tx.set(candado, { reservas: FieldValue.increment(1), actualizado: FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(ref, { ...cita, creado: FieldValue.serverTimestamp(), creadoMs: Date.now(), recordatorioEnviado: false });
         return ref.id;
       });
     },

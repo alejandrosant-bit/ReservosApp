@@ -91,13 +91,30 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
     return;
   }
 
-  const store = await crearStoreFirestore(negocioId);
-  const { mensajes } = await procesarMensaje({ telefono: mensaje.from, nombrePerfil, texto, opcionId }, store, {
-    marcaTiempo: Number(mensaje.timestamp) * 1000 || Date.now(),
-  });
+  let mensajes;
+  try {
+    const store = await crearStoreFirestore(negocioId);
+    ({ mensajes } = await procesarMensaje({ telefono: mensaje.from, nombrePerfil, texto, opcionId }, store, {
+      marcaTiempo: Number(mensaje.timestamp) * 1000 || Date.now(),
+    }));
+  } catch (e) {
+    // Nunca dejar al cliente sin respuesta: se registra el error y se
+    // le pide que repita el mensaje (la conversación sigue donde iba).
+    console.error("Error del bot", negocioId, e);
+    mensajes = [{ tipo: "texto", texto: "Uy, tuve un problemita para procesar tu mensaje 🙈. ¿Me lo escribes de nuevo, por favor?" }];
+  }
 
   for (const m of mensajes) {
-    await enviarWhatsapp({ phoneNumberId, token, para: mensaje.from, mensaje: m });
+    try {
+      await enviarWhatsapp({ phoneNumberId, token, para: mensaje.from, mensaje: m });
+    } catch (e) {
+      // Si un mensaje con botones/lista falla, se reintenta como texto simple
+      console.error("Error enviando a WhatsApp", e.message);
+      if (m.tipo !== "texto") {
+        const opciones = (m.botones || m.filas || []).map((o, i) => `${i + 1}. ${o.titulo}`).join("\n");
+        await enviarWhatsapp({ phoneNumberId, token, para: mensaje.from, mensaje: { tipo: "texto", texto: `${m.texto}\n\n${opciones}\n\nResponde con el número de tu opción.` } }).catch(() => {});
+      }
+    }
   }
 
   // Últimos mensajes de la conversación (para verlos en la app)

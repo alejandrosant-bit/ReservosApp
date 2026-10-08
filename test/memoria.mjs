@@ -1,6 +1,6 @@
 // Store en memoria con la misma interfaz que el de Firestore
 // (netlify/functions/lib/store-firestore.mjs), para probar el bot.
-import { nombresParecidos, soloDigitos } from "../public/core.js";
+import { nombresParecidos, soloDigitos, profesionalesLibres, aMinutos, conDefectos } from "../public/core.js";
 
 export function crearStoreMemoria({ config = {}, servicios = [], profesionales = [], clientes = [], citas = [] } = {}) {
   let n = 0;
@@ -41,6 +41,9 @@ export function crearStoreMemoria({ config = {}, servicios = [], profesionales =
       Object.assign(db.clientes.find((c) => c.id === id), data);
     },
     async crearCita(data) {
+      // Igual que la transacción real: vuelve a revisar el cupo
+      const libres = profesionalesLibres({ fecha: data.fecha, inicio: aMinutos(data.hora), duracion: data.duracion, servicioId: data.servicioId, citas: db.citas, profesionales, config: conDefectos(config) });
+      if (!libres.length) return null;
       const id = "cita" + ++n;
       db.citas.push({ id, ...data });
       return id;

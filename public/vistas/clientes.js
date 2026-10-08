@@ -227,7 +227,7 @@ export function formularioCliente(c = null) {
         const dup = ced && E.clientes.find((x) => soloDigitos(x.cedula) === ced && x.id !== c?.id);
         if (dup) return (cu.querySelector("#err").textContent = `Ya existe un cliente con esa cédula: ${dup.nombre}`);
         const id = c?.id || nuevoId("clientes");
-        guardar("clientes", id, datosCliente({ ...d, ...(c ? {} : { visitas: 0, totalGastado: 0, origen: "app", creado: serverTimestamp() }) }));
+        guardar("clientes", id, datosCliente({ ...d, ...(c ? {} : { visitas: 0, totalGastado: 0, origen: "app", creado: serverTimestamp(), creadoMs: Date.now() }) }));
         toast("Cliente guardado ✅");
         cerrar();
       };

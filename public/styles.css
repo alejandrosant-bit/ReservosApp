@@ -475,3 +475,38 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Celebraciones (pago / cliente nuevo) ---------- */
+.celebracion {
+  position: fixed; inset: 0; z-index: 300; pointer-events: none;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 22vh) 16px 0;
+  transition: opacity .45s ease;
+}
+.celebracion.salir { opacity: 0; }
+.celebra-tarjeta {
+  pointer-events: none; text-align: center; min-width: 220px; max-width: 92vw;
+  padding: 18px 26px 16px; border-radius: 26px;
+  background: linear-gradient(160deg, #ffffff, var(--rosa-polvo));
+  border: 2px solid #fff; box-shadow: var(--sombra-alta);
+  animation: celebra-entra .6s var(--rebote) both;
+}
+.celebracion-pago .celebra-tarjeta { background: linear-gradient(160deg, #ffffff, var(--menta)); }
+.celebra-icono { font-size: 44px; line-height: 1; display: inline-block; animation: celebra-icono 1s var(--rebote) .15s both; }
+.celebra-titulo { font-family: var(--fuente-titulo); font-weight: 600; font-size: 21px; color: var(--texto); margin-top: 6px; }
+.celebra-detalle { font-weight: 800; font-size: 17px; color: var(--pri); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.celebracion-pago .celebra-detalle { color: var(--ok); }
+.lluvia { position: absolute; inset: 0; overflow: hidden; }
+.lluvia .pieza {
+  position: absolute; top: -40px; font-size: calc(24px * var(--tam, 1));
+  animation: cae 2.4s cubic-bezier(.3, .6, .5, 1) both;
+}
+@keyframes celebra-entra { 0% { transform: translateY(-30px) scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes celebra-icono { 0% { transform: scale(0) rotate(-30deg); } 60% { transform: scale(1.3) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes cae {
+  0% { transform: translateY(0) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(80vh) rotate(var(--giro, 20deg)); opacity: 0; }
+}
+.chip-cruce { background: var(--error-suave); color: var(--error); animation: late 1.6s ease-in-out infinite; }
+.aviso-cruce { background: var(--error-suave); color: var(--error); border-color: color-mix(in srgb, var(--error) 25%, transparent); margin-bottom: 12px; }

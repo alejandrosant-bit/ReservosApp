@@ -198,3 +198,68 @@ export function iniciales(nombre) {
     .map((w) => w[0].toUpperCase())
     .join("");
 }
+
+// ------------------------------------------------------------
+// Celebraciones: tarjeta que aparece con un saltito, lluvia de
+// iconos y un sonido alegre. Se usan al entrar un pago o un
+// cliente nuevo. No bloquean la pantalla (se puede seguir tocando).
+// ------------------------------------------------------------
+let celebracionActual = null;
+
+function sonidoFeliz(tipo) {
+  try {
+    desbloquearAudio();
+    const ctx = audioCtx;
+    if (!ctx) return;
+    // Pago: "caja registradora" (dos notas brillantes); cliente: arpegio
+    const notas = tipo === "pago" ? [1318.5, 1760, 2093] : [523.25, 659.25, 783.99, 1046.5];
+    notas.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = tipo === "pago" ? "triangle" : "sine";
+      o.frequency.value = f;
+      const t0 = ctx.currentTime + i * (tipo === "pago" ? 0.09 : 0.11);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.28, t0 + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+      o.connect(g).connect(ctx.destination);
+      o.start(t0);
+      o.stop(t0 + 0.4);
+    });
+  } catch {}
+}
+
+export function celebrar({ tipo = "pago", titulo, detalle = "", icono = "🎉", sonido = true } = {}) {
+  try {
+    celebracionActual?.remove();
+    const capa = document.createElement("div");
+    capa.className = `celebracion celebracion-${tipo}`;
+    capa.setAttribute("role", "status");
+    capa.setAttribute("aria-live", "polite");
+    const lluvia = tipo === "pago" ? ["💸", "💰", "✨", "💖", "🪙"] : ["💖", "🌸", "✨", "🎀", "💕"];
+    const reducir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const piezas = reducir
+      ? ""
+      : Array.from({ length: 18 }, (_, i) => {
+          const x = Math.round(Math.random() * 100);
+          const d = (Math.random() * 0.5).toFixed(2);
+          const r = Math.round(Math.random() * 60 - 30);
+          const s = (0.8 + Math.random() * 0.8).toFixed(2);
+          return `<span class="pieza" style="left:${x}%;animation-delay:${d}s;--giro:${r}deg;--tam:${s}">${lluvia[i % lluvia.length]}</span>`;
+        }).join("");
+    capa.innerHTML = `<div class="lluvia" aria-hidden="true">${piezas}</div>
+      <div class="celebra-tarjeta">
+        <div class="celebra-icono" aria-hidden="true">${esc(icono)}</div>
+        <div class="celebra-titulo">${esc(titulo)}</div>
+        ${detalle ? `<div class="celebra-detalle">${esc(detalle)}</div>` : ""}
+      </div>`;
+    document.body.appendChild(capa);
+    celebracionActual = capa;
+    if (sonido) sonidoFeliz(tipo);
+    navigator.vibrate?.(tipo === "pago" ? [60, 40, 60] : [40, 30, 40, 30, 80]);
+    setTimeout(() => capa.classList.add("salir"), 2600);
+    setTimeout(() => capa.remove(), 3100);
+  } catch (e) {
+    console.warn("celebrar:", e);
+  }
+}

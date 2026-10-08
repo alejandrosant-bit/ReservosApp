@@ -162,3 +162,75 @@ test("con profesionales: cada uno tiene su propia agenda", () => {
   // Masaje: solo Laura lo hace y está ocupada
   assert.ok(!horasDisponibles({ fecha: "2026-10-08", servicio: SERVICIOS[2], citas, profesionales, config, ahora: AHORA }).includes("15:00"));
 });
+
+// ------------------------------------------------------------
+// Dos personas agendan la misma hora
+// ------------------------------------------------------------
+async function llevarAConfirmar(store, telefono, nombre, cedula) {
+  const env = (texto, opcionId = null) => procesarMensaje({ telefono, texto, opcionId }, store, { ahora: AHORA });
+  await env("hola quiero manicure el jueves a las 3");
+  await env(nombre);
+  return env(cedula);
+}
+
+test("dos clientes piden la misma hora: el segundo recibe otras opciones", async () => {
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+  const a = await llevarAConfirmar(store, "573001111111", "Ana Gómez", "111111");
+  const b = await llevarAConfirmar(store, "573002222222", "Bea Ruiz", "222222");
+  assert.equal(a.mensajes.at(-1).tipo, "botones"); // ambas ven "¿La confirmo?"
+  assert.equal(b.mensajes.at(-1).tipo, "botones");
+
+  const ra = await procesarMensaje({ telefono: "573001111111", opcionId: "ok" }, store, { ahora: AHORA });
+  const rb = await procesarMensaje({ telefono: "573002222222", opcionId: "ok" }, store, { ahora: AHORA });
+  assert.match(todoTexto(ra), /no faltes/);
+  assert.match(todoTexto(rb), /acaba de tomar esa hora/);
+  // Le ofrece elegir otra hora (primero mañana/tarde si hay muchas libres)
+  const ultimo = rb.mensajes.at(-1);
+  assert.ok(["lista", "botones"].includes(ultimo.tipo));
+  assert.ok(!(ultimo.filas || ultimo.botones).some((f) => f.id === "hora:15:00"));
+  assert.equal(store.db.citas.filter((c) => c.hora === "15:00" && c.fecha === "2026-10-08").length, 1);
+});
+
+test("confirmaciones exactamente simultáneas: solo una cita queda creada", async () => {
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+  await llevarAConfirmar(store, "573001111111", "Ana Gómez", "111111");
+  await llevarAConfirmar(store, "573002222222", "Bea Ruiz", "222222");
+  const [ra, rb] = await Promise.all([
+    procesarMensaje({ telefono: "573001111111", opcionId: "ok" }, store, { ahora: AHORA }),
+    procesarMensaje({ telefono: "573002222222", opcionId: "ok" }, store, { ahora: AHORA }),
+  ]);
+  const textos = [todoTexto(ra), todoTexto(rb)];
+  assert.equal(textos.filter((t) => /no faltes/.test(t)).length, 1);
+  assert.equal(textos.filter((t) => /acaba de tomar esa hora/.test(t)).length, 1);
+  assert.equal(store.db.citas.length, 1);
+});
+
+test("con dos profesionales, dos personas sí pueden tener la misma hora", async () => {
+  const profesionales = [
+    { id: "p1", nombre: "Laura", servicios: [] },
+    { id: "p2", nombre: "Diana", servicios: [] },
+  ];
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS, profesionales });
+  await llevarAConfirmar(store, "573001111111", "Ana Gómez", "111111");
+  await llevarAConfirmar(store, "573002222222", "Bea Ruiz", "222222");
+  await procesarMensaje({ telefono: "573001111111", opcionId: "ok" }, store, { ahora: AHORA });
+  await procesarMensaje({ telefono: "573002222222", opcionId: "ok" }, store, { ahora: AHORA });
+  const c = store.db.citas;
+  assert.equal(c.length, 2);
+  assert.notEqual(c[0].profesionalId, c[1].profesionalId);
+});
+
+test("detecta citas cruzadas creadas a mano (sobrecupo)", async () => {
+  const { citasEnConflicto } = await import("../public/core.js");
+  const citas = [
+    { id: "a", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "pendiente", profesionalId: "p1" },
+    { id: "b", fecha: "2026-10-08", hora: "15:30", duracion: 30, estado: "confirmada", profesionalId: "p1" },
+    { id: "c", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "pendiente", profesionalId: "p2" },
+    { id: "d", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "cancelada", profesionalId: "p2" },
+  ];
+  const prof = [{ id: "p1" }, { id: "p2" }];
+  assert.deepEqual([...citasEnConflicto(citas, {}, prof)].sort(), ["a", "b"]);
+  // Sin profesionales y capacidad 1: todas las activas que se cruzan
+  assert.deepEqual([...citasEnConflicto(citas, { capacidad: 1 }, [])].sort(), ["a", "b", "c"]);
+  assert.equal(citasEnConflicto(citas, { capacidad: 3 }, []).size, 0);
+});
