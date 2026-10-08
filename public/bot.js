@@ -27,6 +27,9 @@ import {
   normalizar,
   formatoMoneda,
   soloDigitos,
+  deMinutos,
+  rubroDe,
+  vocabularioDe,
 } from "./core.js";
 import { analizar, esSi, esNo, extraerCedula, filtrarPorFranja, buscarServicios } from "./nlp.js";
 
@@ -64,10 +67,13 @@ function idsOfrecidos(mensajes) {
 // ------------------------------------------------------------
 // Bot
 // ------------------------------------------------------------
-export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntrada = "", opcionId = null }, store, opciones = {}) {
+export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntrada = "", opcionId = null, ubicacion = null }, store, opciones = {}) {
   const config = conDefectos(store.config);
-  // Vocabulario según el estilo del negocio (spa: "cita"; barbería: "turno")
-  const tx = (belleza, barberia) => (config.estilo === "barberia" ? barberia : belleza);
+  // Vocabulario según el tipo de negocio ("cita", "turno", "consulta",
+  // "sesión"...). Algunos rubros traen frases propias (barbería).
+  const rubro = rubroDe(config);
+  const V = vocabularioDe(config);
+  const fr = (clave, porDefecto) => rubro.frases?.[clave] || porDefecto;
   const ahora = opciones.ahora || ahoraEnZona(config.zonaHoraria);
   const servicios = (store.servicios || []).filter((s) => s.activo !== false);
   const profesionales = store.profesionales || [];
@@ -87,6 +93,8 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   }
 
   const a = analizar(textoEntrada, { hoyISO: ahora.fecha, servicios });
+  // "Pedir un carro / un servicio" solo es taxi en una línea de taxis
+  if (a.intencion === "taxi" && rubro.modo !== "viajes") a.intencion = "agendar";
   const salida = [];
   const vars = (extra = {}) => ({
     negocio: config.nombre,
@@ -108,9 +116,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
 
   function menuPrincipal(encabezado) {
     return botones(encabezado, [
-      { id: "menu:agendar", titulo: tx("📅 Agendar cita", "📅 Pedir turno") },
-      { id: "menu:cancelar", titulo: tx("❌ Cancelar cita", "❌ Cancelar turno") },
-      { id: "menu:miscitas", titulo: tx("🗓️ Mis citas", "🗓️ Mis turnos") },
+      { id: "menu:agendar", titulo: V.agendar },
+      { id: "menu:cancelar", titulo: `❌ Cancelar ${V.cita}` },
+      { id: "menu:miscitas", titulo: `🗓️ Mis ${V.citas}` },
     ]);
   }
 
@@ -145,7 +153,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
       descripcion: `${d.horas.length} horario${d.horas.length === 1 ? "" : "s"} libre${d.horas.length === 1 ? "" : "s"} · desde ${hora12(d.horas[0])}`,
     }));
     if (dias.length > desde + pagina.length) filas.push({ id: `mas:dia:${desde + pagina.length}`, titulo: "Más días ➡️" });
-    salida.push(lista([prefijo, msg("elegirDia", { servicio: servicio?.nombre || tx("cita", "turno") })].filter(Boolean).join("\n\n"), filas, "Ver días"));
+    salida.push(lista([prefijo, msg("elegirDia", { servicio: servicio?.nombre || V.cita })].filter(Boolean).join("\n\n"), filas, "Ver días"));
   }
 
   async function horasDe(fecha) {
@@ -335,7 +343,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
           fecha: fechaLarga(cita.fecha),
           hora: hora12(cita.hora),
           profesional: cita.profesionalNombre,
-          profesional_linea: cita.profesionalNombre ? `\n${tx("💇", "✂️")} Con ${cita.profesionalNombre}` : "",
+          profesional_linea: cita.profesionalNombre ? `\n👤 Con ${cita.profesionalNombre}` : "",
         })
       )
     );
@@ -366,7 +374,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
       lista(
         msg("elegirCitaCancelar", { cliente: nombre }),
         citas.map((c) => ({ id: `cancel:${c.id}`, titulo: `${fechaCorta(c.fecha)} ${hora12(c.hora)}`, descripcion: c.servicioNombre })),
-        tx("Ver mis citas", "Ver mis turnos")
+        `Ver mis ${V.citas}`
       )
     );
   }
@@ -411,11 +419,11 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
     const citas = clientes.length ? await citasFuturasDe(clientes) : [];
     estado.paso = "inicio";
     if (!citas.length) {
-      salida.push(menuPrincipal([prefijo, tx("No tienes citas próximas registradas con este número. ¿Quieres agendar una?", "No tienes turnos próximos con este número. ¿Te aparto uno?")].filter(Boolean).join("\n\n")));
+      salida.push(menuPrincipal([prefijo, fr("sinProximas", `No tienes ${V.citas} ${V.proximas} ${V.registradas} con este número. ¿Quieres agendar ${V.una}?`)].filter(Boolean).join("\n\n")));
       return;
     }
     const lineas = citas.map((c) => `• *${fechaLarga(c.fecha)}* a las *${hora12(c.hora)}* — ${c.servicioNombre}`);
-    salida.push(menuPrincipal([prefijo, `${tx("Tus próximas citas", "Tus próximos turnos")}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
+    salida.push(menuPrincipal([prefijo, `Tus ${V.proximas} ${V.citas}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
   }
 
   // ----- Mezcla lo que entendimos del texto con lo que ya sabíamos -----
@@ -435,6 +443,206 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   }
 
   // ============================================================
+  // Línea de taxis: pedir ya o programado, recogida por ubicación
+  // de WhatsApp o dirección escrita, destino y confirmación.
+  // ============================================================
+  function textoUbicacion(u) {
+    if (!u) return "";
+    if (u.direccion || u.nombre) return [u.nombre, u.direccion].filter(Boolean).join(" · ");
+    return `📍 Ubicación GPS (${Number(u.lat).toFixed(5)}, ${Number(u.lng).toFixed(5)})`;
+  }
+
+  function menuTaxi(encabezado) {
+    return botones(encabezado, [
+      { id: "viaje:ahora", titulo: "🚕 Pedir taxi ya" },
+      { id: "viaje:programar", titulo: "📅 Programar taxi" },
+      { id: "viaje:cancelar", titulo: "❌ Cancelar taxi" },
+    ]);
+  }
+
+  async function siguientePasoViaje(prefijo = "") {
+    const junto = (t) => [prefijo, t].filter(Boolean).join("\n\n");
+    if (!datos.clienteId) {
+      estado.paso = "viaje_nombre";
+      return salida.push(texto(junto(msg("pedirNombre"))));
+    }
+    if (datos.programado && !(datos.fecha && datos.hora)) {
+      estado.paso = "viaje_cuando";
+      return salida.push(texto(junto(msg("pedirCuando"))));
+    }
+    if (!datos.recogida) {
+      estado.paso = "viaje_origen";
+      return salida.push(texto(junto(msg("pedirOrigen"))));
+    }
+    if (datos.destino === undefined || datos.destino === null) {
+      estado.paso = "viaje_destino";
+      return salida.push(botones(junto(msg("pedirDestino")), [{ id: "viaje:sindestino", titulo: "Se lo digo al conductor" }]));
+    }
+    estado.paso = "viaje_confirmar";
+    salida.push(
+      botones(
+        junto(
+          msg("confirmarViaje", {
+            origen: datos.recogida,
+            destino: datos.destino || "Se lo dices al conductor",
+            cuando: datos.programado ? `${fechaLarga(datos.fecha)} a las ${hora12(datos.hora)}` : "Ahora mismo",
+          })
+        ),
+        [
+          { id: "viaje:ok", titulo: "✅ Sí, pedir taxi" },
+          { id: "viaje:cambiar", titulo: "✏️ Cambiar dirección" },
+          { id: "viaje:no", titulo: "❌ No, gracias" },
+        ]
+      )
+    );
+  }
+
+  async function crearViaje() {
+    const s = (datos.servicioId && servicios.find((x) => x.id === datos.servicioId)) || servicios[0];
+    const ahoraHora = deMinutos(Math.min(ahora.minutos, 23 * 60 + 59));
+    const viaje = {
+      tipo: "viaje",
+      clienteId: datos.clienteId,
+      clienteNombre: datos.nombre,
+      telefono: tel,
+      servicioId: s?.id || "",
+      servicioNombre: s?.nombre || "Viaje",
+      profesionalId: "",
+      profesionalNombre: "",
+      fecha: datos.programado ? datos.fecha : ahora.fecha,
+      hora: datos.programado ? datos.hora : ahoraHora,
+      duracion: Number(s?.duracion) || 30,
+      precio: Number(s?.precio) || 0,
+      estado: "pendiente",
+      origen: "whatsapp",
+      recogida: datos.recogida,
+      ubicacion: datos.ubicacion || null,
+      destino: datos.destino || "",
+      programado: !!datos.programado,
+    };
+    const id = await (store.crearViaje || store.crearCita).call(store, viaje);
+    if (!id) {
+      salida.push(menuTaxi("No pude registrar tu pedido 😕. ¿Lo intentamos de nuevo?"));
+      estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
+      return;
+    }
+    salida.push(
+      texto(
+        datos.programado
+          ? msg("viajeProgramado", { fecha: fechaLarga(viaje.fecha), hora: hora12(viaje.hora), origen: viaje.recogida })
+          : msg("viajePedido")
+      )
+    );
+    await store.notificar?.({ tipo: "viaje", cita: { ...viaje, id } });
+    estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
+  }
+
+  async function cancelarViajeActivo() {
+    await identificarPorTelefono();
+    const activos = datos.clienteId
+      ? (await store.citasFuturasDeClientes([datos.clienteId], ahora.fecha))
+          .filter((c) => c.tipo === "viaje" && ["pendiente", "confirmada"].includes(c.estado))
+          .sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora))
+      : [];
+    estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
+    if (!activos.length) return salida.push(menuTaxi(msg("sinViajes")));
+    const viaje = activos[0];
+    // Si el conductor ya va en camino, mejor hablar con la central
+    if (viaje.estado === "confirmada" && viaje.profesionalId && !viaje.programado) return salida.push(texto(msg("muyTarde")));
+    await store.cancelarCita(viaje.id, { canceladaPor: "cliente_whatsapp" });
+    await store.notificar?.({ tipo: "cancelada", cita: viaje });
+    salida.push(texto(msg("cancelada")));
+  }
+
+  async function flujoViaje() {
+    const ahoraMismo = opcionId === "viaje:ahora";
+    if (opcionId === "viaje:cancelar" || (!opcionId && a.intencion === "cancelar" && estado.paso !== "viaje_confirmar")) return cancelarViajeActivo();
+    if (ahoraMismo || opcionId === "viaje:programar") {
+      await identificarPorTelefono();
+      Object.assign(datos, { programado: !ahoraMismo, fecha: null, hora: null, recogida: null, ubicacion: null, destino: null });
+      return siguientePasoViaje("");
+    }
+    if (!opcionId && a.intencion === "menu") {
+      estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
+      return salida.push(menuTaxi(bienvenida()));
+    }
+
+    switch (estado.paso) {
+      case "viaje_nombre": {
+        const nombre = textoEntrada.trim().replace(/\s+/g, " ");
+        if (normalizar(nombre).length < 2 || /\d/.test(nombre) || nombre.length > 60) return salida.push(texto(msg("pedirNombre")));
+        datos.nombre = nombre.toLowerCase().split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        await guardarClienteNuevo();
+        return siguientePasoViaje(`Gracias, ${datos.nombre.split(" ")[0]} 🙌`);
+      }
+      case "viaje_cuando": {
+        if (!a.hora) return salida.push(texto(msg("pedirCuando")));
+        let fecha = a.fecha || ahora.fecha;
+        if (!a.fecha && aMinutos(a.hora) <= ahora.minutos) fecha = sumarDias(ahora.fecha, 1);
+        if (fecha === ahora.fecha && aMinutos(a.hora) <= ahora.minutos) return salida.push(texto("Esa hora ya pasó 🕒. " + msg("pedirCuando")));
+        datos.fecha = fecha;
+        datos.hora = a.hora;
+        return siguientePasoViaje("");
+      }
+      case "viaje_origen": {
+        if (ubicacion) {
+          datos.ubicacion = ubicacion;
+          datos.recogida = textoUbicacion(ubicacion);
+        } else if (textoEntrada.trim().length >= 5) {
+          datos.recogida = textoEntrada.trim().slice(0, 160);
+        } else return salida.push(texto(msg("pedirOrigen")));
+        return siguientePasoViaje("");
+      }
+      case "viaje_destino": {
+        if (opcionId === "viaje:sindestino") datos.destino = "";
+        else if (ubicacion) datos.destino = textoUbicacion(ubicacion);
+        else if (textoEntrada.trim().length >= 3) {
+          datos.destino = textoEntrada.trim().slice(0, 160);
+          const s = buscarServicios(textoEntrada, servicios);
+          if (s.length === 1) datos.servicioId = s[0].id; // ej. "aeropuerto"
+        } else return siguientePasoViaje("");
+        return siguientePasoViaje("");
+      }
+      case "viaje_confirmar": {
+        if (opcionId === "viaje:ok" || (!opcionId && esSi(textoEntrada))) return crearViaje();
+        if (opcionId === "viaje:cambiar") {
+          datos.recogida = null;
+          datos.ubicacion = null;
+          datos.destino = null;
+          return siguientePasoViaje("");
+        }
+        if (opcionId === "viaje:no" || (!opcionId && (esNo(textoEntrada) || a.intencion === "cancelar"))) {
+          estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
+          return salida.push(menuTaxi("Listo, no pedí nada. ¿Te ayudo con algo más?"));
+        }
+        salida.push(texto(msg("noEntendi")));
+        return siguientePasoViaje("");
+      }
+      default: {
+        await identificarPorTelefono();
+        // Mandó la ubicación de una: es un pedido inmediato
+        if (ubicacion) {
+          Object.assign(datos, { programado: false, recogida: textoUbicacion(ubicacion), ubicacion, destino: null });
+          return siguientePasoViaje(esNuevaConversacion ? bienvenida() : "");
+        }
+        if (["taxi", "agendar"].includes(a.intencion) || a.hora || a.fecha) {
+          const programado = !!(a.hora || a.fecha) && !/\b(ya|ahora|ahorita|urgente)\b/.test(a.norm);
+          Object.assign(datos, { programado, fecha: null, hora: null, recogida: null, ubicacion: null, destino: null });
+          if (programado && a.hora) {
+            let fecha = a.fecha || ahora.fecha;
+            if (!a.fecha && aMinutos(a.hora) <= ahora.minutos) fecha = sumarDias(ahora.fecha, 1);
+            datos.fecha = fecha;
+            datos.hora = a.hora;
+          }
+          return siguientePasoViaje(esNuevaConversacion ? bienvenida() : "");
+        }
+        if (a.intencion === "gracias" && !esNuevaConversacion) return salida.push(texto(msg("despedida")));
+        return salida.push(menuTaxi(esNuevaConversacion || a.intencion === "saludo" ? bienvenida() : msg("noEntendi")));
+      }
+    }
+  }
+
+  // ============================================================
   // Despacho
   // ============================================================
   if (config.botActivo === false) {
@@ -445,7 +653,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   const esNuevaConversacion = estado.paso === "inicio" && !estado.saludado;
 
   // Intenciones globales que cambian de flujo en cualquier momento
-  if (!opcionId && a.intencion === "cancelar" && estado.paso !== "cancelar_confirmar") {
+  if (rubro.modo === "viajes") {
+    await flujoViaje();
+  } else if (!opcionId && a.intencion === "cancelar" && estado.paso !== "cancelar_confirmar") {
     await identificarPorTelefono();
     await empezarCancelacion(esNuevaConversacion ? bienvenida() : "");
   } else if (!opcionId && a.intencion === "menu") {
@@ -464,7 +674,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
         const hayDatosDeCita = a.servicio || a.serviciosCandidatos.length || a.fecha || a.hora;
         if (a.intencion === "reagendar") {
           await empezarCancelacion(
-            (esNuevaConversacion ? bienvenida() + "\n\n" : "") + tx("Para cambiar tu cita primero cancelamos la actual y luego te ayudo a agendar la nueva. 😉", "Para cambiar tu turno primero cancelamos el actual y luego te aparto uno nuevo 👊")
+            (esNuevaConversacion ? bienvenida() + "\n\n" : "") + fr("reagendar", `Para cambiar tu ${V.cita} primero cancelamos ${V.la} actual y luego te ayudo a agendar ${V.la} ${V.nueva}. 😉`)
           );
           datos.reagendar = true;
         } else if (a.intencion === "agendar" || hayDatosDeCita) {
@@ -643,7 +853,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
         const cliente = ced ? await store.buscarClientePorCedula(ced) : null;
         if (!cliente || !(datos.clientesCancelar || []).includes(cliente.id)) {
           estado.paso = "inicio";
-          salida.push(menuPrincipal(tx("La cédula no coincide con la de la cita 🙏. Si necesitas ayuda comunícate directamente con el negocio.", "La cédula no coincide con la del turno. Si necesitas ayuda llama directo a la barbería.")));
+          salida.push(menuPrincipal(fr("cedulaNoCoincide", `La cédula no coincide con la de ${V.la} ${V.cita} 🙏. Si necesitas ayuda comunícate directamente con el negocio.`)));
           break;
         }
         await mostrarCitasParaCancelar([cliente.id], cliente.nombre);
@@ -663,9 +873,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
           const todas = await store.citasPorIds(datos.cancelables || []);
           salida.push(
             lista(
-              tx("¿Cuál cita deseas cancelar?", "¿Cuál turno cancelo?"),
+              fr("cualCancelar", `¿Cuál ${V.cita} deseas cancelar?`),
               todas.map((c) => ({ id: `cancel:${c.id}`, titulo: `${fechaCorta(c.fecha)} ${hora12(c.hora)}`, descripcion: c.servicioNombre })),
-              tx("Ver mis citas", "Ver mis turnos")
+              `Ver mis ${V.citas}`
             )
           );
           break;
@@ -695,11 +905,11 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
             datos.fecha = null;
             datos.hora = null;
             datos.franja = null;
-            await empezarAgenda(tx("Ahora elijamos tu nueva cita 👇", "Ahora escojamos tu nuevo turno 👇"));
+            await empezarAgenda(fr("nuevaCita", `Ahora elijamos tu ${V.nueva} ${V.cita} 👇`));
           }
         } else {
           estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre } };
-          salida.push(menuPrincipal(tx("¡Perfecto! Tu cita sigue en pie 😊. ¿Te ayudo con algo más?", "¡Listo! Tu turno sigue en pie 👊. ¿Algo más?")));
+          salida.push(menuPrincipal(fr("sigueEnPie", `¡Perfecto! Tu ${V.cita} sigue en pie 😊. ¿Te ayudo con algo más?`)));
         }
         break;
       }

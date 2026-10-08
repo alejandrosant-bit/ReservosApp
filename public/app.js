@@ -5,7 +5,7 @@ import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, ac
 import * as cfgFirebase from "./firebase-config.js";
 import { $, $$, esc, toast, sonar, abrirModal, celebrar, aplicarFondo } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
-import { hora12, formatoMoneda, estiloDe } from "./core.js";
+import { hora12, formatoMoneda, estiloDe, vocabularioDe } from "./core.js";
 
 const VISTAS = {
   agenda: () => import("./vistas/agenda.js"),
@@ -218,7 +218,7 @@ function alNuevoCliente(c) {
     tipo: "cliente",
     icono: c.origen === "whatsapp" ? "💬" : est.iconoCliente,
     lluvia: est.lluviaCliente,
-    titulo: est.tituloCliente,
+    titulo: est.tituloCliente || `¡Nuevo ${vocabularioDe(E.config).cliente}!`,
     detalle: `${est.bienvenida(nombre)}${c.origen === "whatsapp" ? " · llegó por WhatsApp" : ""}`,
   });
 }
@@ -229,12 +229,18 @@ function alNuevoCliente(c) {
 // Estilo visual: "belleza" (spa) o "barberia". Un despliegue puede
 // fijar el estilo de la pantalla de entrada con estiloPorDefecto.
 const ESTILO_DESPLIEGUE = cfgFirebase.estiloPorDefecto || "belleza";
+const ICONOS_ESTILO = {
+  belleza: ["./icon-192.png", "./manifest.json"],
+  barberia: ["./icon-barber-192.png", "./manifest-barber.json"],
+};
 function aplicarEstilo(estilo) {
-  const barberia = estilo === "barberia";
-  document.documentElement.dataset.estilo = barberia ? "barberia" : "belleza";
-  // Ícono e instalación con la identidad de cada estilo
-  const icono = barberia ? "./icon-barber-192.png" : "./icon-192.png";
-  $('link[rel="manifest"]')?.setAttribute("href", barberia ? "./manifest-barber.json" : "./manifest.json");
+  const valido = ["belleza", "barberia", "salud", "general", "taxi"].includes(estilo) ? estilo : "belleza";
+  const barberia = valido === "barberia";
+  document.documentElement.dataset.estilo = valido;
+  // Ícono e instalación con la identidad de cada estilo (los demás
+  // usan el ícono de Reservo)
+  const [icono, manifiesto] = ICONOS_ESTILO[valido] || ["./icon-reservo-192.png", "./manifest-reservo.json"];
+  $('link[rel="manifest"]')?.setAttribute("href", manifiesto);
   $('link[rel="apple-touch-icon"]')?.setAttribute("href", icono);
   $('link[rel="icon"]')?.setAttribute("href", icono);
   $$("[data-logo]").forEach((el) => {
@@ -249,12 +255,19 @@ aplicarEstilo(ESTILO_DESPLIEGUE);
 
 function aplicarMarca() {
   const c = E.config;
-  aplicarEstilo(c.estilo || ESTILO_DESPLIEGUE);
+  aplicarEstilo(E.configExiste ? c.estilo : ESTILO_DESPLIEGUE);
   document.documentElement.style.setProperty("--pri", c.colorPrimario || "#c2185b");
   aplicarFondo(c.colorFondo);
   $('meta[name="theme-color"]').setAttribute("content", c.colorPrimario || "#c2185b");
   $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Reservo"));
-  $$("[data-logo]").forEach((el) => (el.src = c.logo || (document.documentElement.dataset.estilo === "barberia" ? "./icon-barber-192.png" : "./icon-192.png")));
+  $$("[data-logo]").forEach((el) => (el.src = c.logo || (ICONOS_ESTILO[document.documentElement.dataset.estilo] || ["./icon-reservo-192.png"])[0]));
+  const V = vocabularioDe(c);
+  const nav = $('#nav a[data-tab="clientes"] span:last-child');
+  if (nav) nav.textContent = V.Clientes;
+  const icoNav = $('#nav a[data-tab="agenda"] .ico');
+  if (icoNav) icoNav.textContent = V.viajes ? "🚕" : "📅";
+  const nAgenda = $('#nav a[data-tab="agenda"] span:last-child');
+  if (nAgenda) nAgenda.textContent = V.viajes ? "Central" : "Agenda";
   document.title = c.nombre || (c.estilo === "barberia" ? "Reservo Barber" : "Reservo");
   try {
     localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, fondo: c.colorFondo || "", logo: c.logo, estilo: c.estilo }));

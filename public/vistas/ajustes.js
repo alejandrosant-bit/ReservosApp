@@ -3,7 +3,7 @@
 // servicios, profesionales, bot de WhatsApp y notificaciones.
 // ============================================================
 import { E, alCambiar, guardarConfig, guardar, borrar, nuevoId, sesion, db, doc, setDoc, deleteDoc, escribir, listarColeccion, lote } from "../datos.js";
-import { ESTILOS, estiloDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
+import { ESTILOS, estiloDe, RUBROS, ORDEN_RUBROS, rubroDe, vocabularioDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, campoMonto, leerMonto, montoATexto, sonar, descargar, aplicarFondo } from "../ui.js";
 import { prepararPush, probarNotificacion, pushDisponible } from "../notificaciones.js";
 import { colorProf } from "./agenda.js";
@@ -39,12 +39,23 @@ export function montar(c, params) {
   };
 }
 
+function secciones() {
+  const V = vocabularioDe(E.config);
+  return SECCIONES.map(([k, ico, t, d]) =>
+    k === "profesionales"
+      ? [k, V.viajes ? "🚘" : "👥", V.Profesionales, V.viajes ? "Conductores, placas y vehículos" : "Equipo, servicios y comisiones"]
+      : k === "reglas"
+        ? [k, ico, t, `Intervalos, anticipación, cancelación de ${V.citas}`]
+        : [k, ico, t, d]
+  );
+}
+
 function pintar() {
   if (!cont) return;
   cont.innerHTML = `
     <div class="cab-vista"><h2>Ajustes</h2><span class="peq suave">${esc(E.usuario?.email || "")}</span></div>
     <div class="menu-ajustes">
-      ${SECCIONES.map(([k, ico, t, d]) => `<button class="tarjeta" data-s="${k}"><span class="ico">${ico}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
+      ${secciones().map(([k, ico, t, d]) => `<button class="tarjeta" data-s="${k}"><span class="ico">${ico}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
     </div>
     <div class="seccion"><button class="btn btn-sec btn-bloque" id="salir">Cerrar sesión</button></div>`;
   cont.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => abrirSeccion(b.dataset.s)));
@@ -126,9 +137,12 @@ function seccionNegocio() {
         ${c.logo ? '<button type="button" class="btn-link peq" id="quitar-logo">Quitar logo</button>' : ""}</div>
       </div>
       <label>Nombre del negocio<input name="nombre" required value="${esc(c.nombre)}" /></label>
-      <label>Estilo de la app
-        <select name="estilo">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${k === (c.estilo || "belleza") ? "selected" : ""}>${e.nombre}</option>`).join("")}</select>
-        <span class="ayuda">Cambia colores, letras, íconos y el tono del bot de WhatsApp. La app funciona igual.</span></label>
+      <label>Tipo de negocio
+        <select name="rubro">${ORDEN_RUBROS.map((k) => `<option value="${k}" ${k === rubroDe(c).id ? "selected" : ""}>${RUBROS[k].icono} ${RUBROS[k].nombre}</option>`).join("")}</select>
+        <span class="ayuda">Cambia las palabras de la app y del bot (cita, turno, consulta, paciente, conductor…) y el tono de WhatsApp.</span></label>
+      <label>Estilo visual
+        <select name="estilo">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${k === c.estilo ? "selected" : ""}>${e.nombre}</option>`).join("")}</select>
+        <span class="ayuda">Colores, letras e íconos. Puedes combinar cualquier estilo con cualquier tipo de negocio.</span></label>
       <label>Dirección<input name="direccion" value="${esc(c.direccion)}" placeholder="Cra 10 # 20-30, Bogotá" /></label>
       <div class="dos-col">
         <label>Teléfono del negocio<input name="telefono" inputmode="tel" value="${esc(c.telefono)}" /></label>
@@ -197,14 +211,19 @@ function seccionNegocio() {
         const d = datosForm(f);
         const cambios = { ...d, codigoPais: d.codigoPais.replace(/\D/g, ""), logo, colorFondo: fondo };
         guardado = true;
-        const anterior = c.estilo || "belleza";
-        if (d.estilo !== anterior) {
-          // Nuevo estilo: el bot adopta el tono nuevo y, si el color era
-          // el del estilo anterior, también cambia el color.
-          cambios.mensajes = { ...ESTILOS[d.estilo].mensajes };
-          if (d.colorPrimario === ESTILOS[anterior].color) cambios.colorPrimario = ESTILOS[d.estilo].color;
-          if (c.asistente === ESTILOS[anterior].asistente) cambios.asistente = ESTILOS[d.estilo].asistente;
+        const rubroAnterior = rubroDe(c);
+        const estiloAnterior = c.estilo;
+        if (d.rubro !== rubroAnterior.id) {
+          // Nuevo tipo de negocio: el bot adopta su vocabulario y tono.
+          const nuevo = rubroDe({ rubro: d.rubro });
+          cambios.mensajes = { ...nuevo.mensajes };
+          if (c.asistente === rubroAnterior.asistente) cambios.asistente = nuevo.asistente;
+          // Si no tocó el estilo, también pasa al estilo del nuevo tipo
+          if (d.estilo === estiloAnterior) cambios.estilo = nuevo.estilo;
+          if (nuevo.modo === "viajes") Object.assign(cambios, { pedirCedula: false, horasMinCancelacion: 0 });
         }
+        const estiloFinal = cambios.estilo || d.estilo;
+        if (estiloFinal !== estiloAnterior && d.colorPrimario === ESTILOS[estiloAnterior]?.color) cambios.colorPrimario = ESTILOS[estiloFinal].color;
         guardarConfig(cambios);
         toast("Guardado ✅");
         cerrar();
@@ -483,10 +502,15 @@ function editarServicio(s = null) {
 // Profesionales
 // ------------------------------------------------------------
 function seccionProfesionales() {
+  const V = vocabularioDe(E.config);
   const { cuerpo } = abrirModal({
-    titulo: "Profesionales",
-    html: `<p class="ayuda">Si registras a tu equipo, cada uno tiene su propia agenda: el bot ofrece una hora si al menos uno de los que hacen ese servicio está libre. Si trabajas sola/o, no necesitas agregar a nadie.</p>
-      <div id="lista"></div><button class="btn btn-pri btn-bloque" id="nuevo" style="margin-top:12px">+ Agregar profesional</button>`,
+    titulo: V.Profesionales,
+    html: `<p class="ayuda">${
+      V.viajes
+        ? "Registra a tus conductores con su placa y vehículo. Al asignar un pedido, el pasajero recibe por WhatsApp el nombre, la placa y el tiempo de llegada."
+        : `Si registras a tu equipo, cada uno tiene su propia agenda: el bot ofrece una hora si al menos uno de los que hacen ese servicio está libre. Si trabajas sola/o, no necesitas agregar a nadie.`
+    }</p>
+      <div id="lista"></div><button class="btn btn-pri btn-bloque" id="nuevo" style="margin-top:12px">+ Agregar ${V.profesional}</button>`,
     onAbrir(cu) {
       cu.querySelector("#nuevo").onclick = () => editarProfesional();
     },
@@ -498,7 +522,7 @@ function seccionProfesionales() {
             (p, i) => `<div class="item" data-id="${p.id}"><span class="punto" style="--color:${esc(colorProf(p, i))}"></span>
           <div class="crece"><div class="negrita">${esc(p.nombre)} ${p.activo === false ? '<span class="chip">Inactivo</span>' : ""}</div>
           <div class="peq suave">${p.servicios?.length ? p.servicios.map((id) => E.servicios.find((s) => s.id === id)?.nombre).filter(Boolean).join(", ") : "Todos los servicios"}</div></div>
-          <div class="peq">${p.comision ? p.comision + "%" : ""}</div></div>`
+          <div class="peq">${p.placa ? esc(p.placa) : p.comision ? p.comision + "%" : ""}</div></div>`
           )
           .join("")}</div>`
       : '<p class="vacio">Sin profesionales registrados.</p>';
@@ -512,17 +536,27 @@ function seccionProfesionales() {
 }
 
 function editarProfesional(p = null) {
+  const V = vocabularioDe(E.config);
   abrirModal({
-    titulo: p ? "Editar profesional" : "Nuevo profesional",
+    titulo: p ? `Editar ${V.profesional}` : `Nuevo ${V.profesional}`,
     html: `<form id="f">
       <label>Nombre<input name="nombre" required value="${esc(p?.nombre || "")}" /></label>
+      ${
+        V.viajes
+          ? `<div class="tres-col">
+        <label>Placa<input name="placa" value="${esc(p?.placa || "")}" placeholder="ABC123" autocomplete="off" style="text-transform:uppercase" /></label>
+        <label>Vehículo<input name="vehiculo" value="${esc(p?.vehiculo || "")}" placeholder="Kia Picanto amarillo" autocomplete="off" /></label>
+        <label>Celular<input name="celular" inputmode="tel" value="${esc(p?.celular || "")}" autocomplete="off" /></label>
+      </div>`
+          : ""
+      }
       <div class="dos-col">
         <label>Comisión (%)<input type="number" min="0" max="100" step="0.5" name="comision" value="${p?.comision ?? ""}" placeholder="Ej. 40" /></label>
         <label>Color en la agenda<input type="color" name="color" value="${esc(p?.color || colorProf(null, E.profesionales.length))}" /></label>
       </div>
       <div class="negrita peq">¿Qué servicios hace? (ninguno marcado = todos)</div>
       <div>${E.servicios.map((s) => `<label class="check" style="padding:4px 0"><input type="checkbox" name="servicios" value="${s.id}" ${p?.servicios?.includes(s.id) ? "checked" : ""} /> ${esc(s.nombre)}</label>`).join("")}</div>
-      <label class="check"><input type="checkbox" name="activo" ${p?.activo === false ? "" : "checked"} /> Activo (recibe citas)</label>
+      <label class="check"><input type="checkbox" name="activo" ${p?.activo === false ? "" : "checked"} /> Activo (recibe ${V.citas})</label>
       <div class="fila-botones">${p ? '<button type="button" class="btn btn-sec" id="borrar">🗑️ Eliminar</button>' : ""}<button class="btn btn-pri">Guardar</button></div>
     </form>`,
     onAbrir(cu, cerrar) {
@@ -536,6 +570,7 @@ function editarProfesional(p = null) {
           color: d.color,
           servicios: [].concat(d.servicios || []),
           activo: f.activo.checked,
+          ...(V.viajes ? { placa: String(d.placa || "").toUpperCase().replace(/\s+/g, ""), vehiculo: (d.vehiculo || "").trim(), celular: (d.celular || "").trim() } : {}),
         });
         toast("Guardado ✅");
         cerrar();
@@ -576,8 +611,30 @@ const ETIQUETAS_MENSAJES = {
   fueraDeServicio: "Bot apagado",
 };
 
+const ETIQUETAS_TAXI = {
+  bienvenida: "Saludo de bienvenida",
+  pedirNombre: "Pedir nombre (pasajero nuevo)",
+  pedirOrigen: "Pedir dirección o ubicación de recogida",
+  pedirDestino: "Pedir destino",
+  pedirCuando: "Pedir día y hora (taxi programado)",
+  confirmarViaje: "Confirmar el pedido",
+  viajePedido: "Pedido recibido (buscando conductor)",
+  viajeProgramado: "Taxi programado",
+  asignado: "Taxi en camino (conductor, placa, minutos)",
+  llego: "El taxi llegó",
+  canceladoPorEmpresa: "No hay taxis disponibles",
+  cancelada: "Viaje cancelado",
+  sinViajes: "No tiene viajes para cancelar",
+  muyTarde: "No se puede cancelar (ya va en camino)",
+  recordatorio: "Recordatorio de taxi programado",
+  despedida: "Respuesta a “gracias”",
+  noEntendi: "No entendí",
+  fueraDeServicio: "Bot apagado",
+};
+
 function seccionBot() {
   const c = E.config;
+  const ETIQ = vocabularioDe(c).viajes ? ETIQUETAS_TAXI : ETIQUETAS_MENSAJES;
   abrirModal({
     titulo: "Bot de WhatsApp",
     ancho: "ancho",
@@ -587,8 +644,8 @@ function seccionBot() {
         <label>Nombre del asistente<input name="asistente" value="${esc(c.asistente)}" placeholder="Sofi" /></label>
         <label class="check" style="margin-top:22px"><input type="checkbox" name="pedirCedula" ${c.pedirCedula ? "checked" : ""} /> Pedir cédula a clientes nuevos</label>
       </div>
-      <p class="ayuda">Variables que puedes usar: {negocio} {asistente} {cliente} {servicio} {fecha} {hora} {direccion} {horas_cancelacion}. Usa *texto* para <b>negrita</b> y _texto_ para <i>cursiva</i> en WhatsApp.</p>
-      ${Object.entries(ETIQUETAS_MENSAJES)
+      <p class="ayuda">Variables que puedes usar: {negocio} {asistente} {cliente} {servicio} {fecha} {hora} {direccion} {horas_cancelacion}. Taxis: {origen} {destino} {conductor} {placa} {vehiculo} {eta}. Usa *texto* para <b>negrita</b> y _texto_ para <i>cursiva</i> en WhatsApp.</p>
+      ${Object.entries(ETIQ)
         .map(
           ([k, t]) => `<label>${t} <button type="button" class="btn-link mini" data-reset="${k}" style="align-self:flex-start">Restaurar original</button>
           <textarea name="m_${k}" rows="${(c.mensajes[k] || "").length > 140 ? 6 : 2}">${esc(c.mensajes[k])}</textarea></label>`
@@ -603,12 +660,12 @@ function seccionBot() {
     </form>`,
     onAbrir(cu, cerrar) {
       const f = cu.querySelector("#f");
-      const originales = estiloDe(c).mensajes;
+      const originales = rubroDe(c).mensajes;
       cu.querySelectorAll("[data-reset]").forEach((b) => (b.onclick = () => (f[`m_${b.dataset.reset}`].value = originales[b.dataset.reset])));
       const leer = () => {
         const d = datosForm(f);
         const mensajes = {};
-        for (const k of Object.keys(ETIQUETAS_MENSAJES)) mensajes[k] = (d[`m_${k}`] || "").trim() || originales[k];
+        for (const k of Object.keys(ETIQ)) mensajes[k] = (d[`m_${k}`] || "").trim() || originales[k];
         return {
           botActivo: f.botActivo.checked,
           pedirCedula: f.pedirCedula.checked,
@@ -744,38 +801,6 @@ function seccionRespaldo() {
 // ------------------------------------------------------------
 // Asistente de primera vez
 // ------------------------------------------------------------
-const PLANTILLAS = {
-  spa: [
-    ["Masaje relajante", 60, 90000, "Spa", "masaje, relajacion"],
-    ["Masaje descontracturante", 60, 110000, "Spa", "masaje, contractura, espalda"],
-    ["Limpieza facial", 60, 85000, "Facial", "facial, cara, limpieza"],
-    ["Manicure", 45, 25000, "Uñas", "uñas, manos"],
-    ["Pedicure", 60, 35000, "Uñas", "uñas, pies"],
-  ],
-  peluqueria: [
-    ["Corte de dama", 45, 35000, "Cabello", "corte, pelo, cabello"],
-    ["Corte de caballero", 30, 25000, "Cabello", "corte, hombre"],
-    ["Cepillado", 45, 30000, "Cabello", "brushing, secado, planchado"],
-    ["Tinte / color", 120, 120000, "Color", "tinte, color, mechas, raiz"],
-    ["Keratina", 150, 180000, "Tratamiento", "alisado, keratina"],
-    ["Manicure", 45, 25000, "Uñas", "uñas, manos"],
-  ],
-  barberia: [
-    ["Corte clásico", 30, 25000, "Corte", "corte, pelo, cabello, motilada"],
-    ["Fade / degradado", 40, 30000, "Corte", "fade, degradado, desvanecido, bajo"],
-    ["Corte + barba", 50, 40000, "Combo", "barba, combo, completo"],
-    ["Arreglo de barba", 20, 15000, "Barba", "barba, perfilado, contorno"],
-    ["Afeitado clásico con toalla caliente", 30, 25000, "Barba", "afeitado, rasurado, toalla"],
-    ["Diseño / líneas", 15, 10000, "Extras", "diseño, lineas, raya"],
-    ["Cejas", 10, 8000, "Extras", "cejas, ceja"],
-  ],
-  unas: [
-    ["Manicure tradicional", 45, 20000, "Manos", "uñas, manos"],
-    ["Semipermanente", 60, 45000, "Manos", "semi, gel, esmaltado"],
-    ["Uñas acrílicas", 120, 90000, "Manos", "acrilicas, extension, postizas"],
-    ["Pedicure", 60, 35000, "Pies", "pies, uñas"],
-  ],
-};
 
 const PAISES = {
   CO: { nombre: "Colombia", moneda: "COP", monedas: ["COP", "USD"], zona: "America/Bogota", codigo: "57", metodos: ["Efectivo", "Transferencia", "Nequi", "Daviplata", "Tarjeta"], tasas: { USD: 4000 } },
@@ -786,40 +811,59 @@ const PAISES = {
 };
 
 export function asistenteInicial() {
+  const sugerido = document.documentElement.dataset.estilo === "barberia" ? "barberia" : "spa";
   abrirModal({
     titulo: "¡Hola! Configuremos tu negocio",
+    ancho: "ancho",
     html: `<form id="f">
       <p class="peq suave">Solo toma un minuto. Todo se puede cambiar después en Ajustes.</p>
-      <label>Nombre del negocio<input name="nombre" required placeholder="Ej. Spa Luna" /></label>
-      <label>Tipo de negocio<select name="tipo">
-        <option value="spa">Spa / estética</option><option value="peluqueria">Peluquería / salón de belleza</option>
-        <option value="barberia" ${document.documentElement.dataset.estilo === "barberia" ? "selected" : ""}>Barbería</option><option value="unas">Uñas / manicure</option></select></label>
-      <label>País<select name="pais">${Object.entries(PAISES).map(([k, p]) => `<option value="${k}">${p.nombre}</option>`).join("")}</select></label>
-      <label>Nombre del asistente virtual (bot de WhatsApp)<input name="asistente" id="asis-ini" value="${document.documentElement.dataset.estilo === "barberia" ? "Max" : "Sofi"}" /></label>
+      <fieldset class="rubros-campo">
+        <legend>¿Qué tipo de negocio tienes?</legend>
+        <div class="rubros">
+          ${ORDEN_RUBROS.map(
+            (k) => `<label class="rubro-op">
+            <input type="radio" name="rubro" value="${k}" ${k === sugerido ? "checked" : ""} />
+            <span class="rubro-ico" aria-hidden="true">${RUBROS[k].icono}</span>
+            <span class="rubro-nombre">${esc(RUBROS[k].nombre)}</span>
+          </label>`
+          ).join("")}
+        </div>
+      </fieldset>
+      <label>Nombre del negocio<input name="nombre" required id="nombre-ini" placeholder="Ej. Spa Luna" /></label>
+      <div class="dos-col">
+        <label>País<select name="pais">${Object.entries(PAISES).map(([k, p]) => `<option value="${k}">${p.nombre}</option>`).join("")}</select></label>
+        <label>Nombre del asistente de WhatsApp<input name="asistente" id="asis-ini" value="${RUBROS[sugerido].asistente}" /></label>
+      </div>
       <label class="check"><input type="checkbox" name="ejemplos" checked /> Crear servicios de ejemplo (luego ajustas precios)</label>
       <button class="btn btn-pri btn-bloque">Empezar 🚀</button>
     </form>`,
     onAbrir(cu, cerrar) {
       const f0 = cu.querySelector("#f");
-      f0.tipo.addEventListener("change", () => {
-        const estilo = f0.tipo.value === "barberia" ? "barberia" : "belleza";
-        document.documentElement.dataset.estilo = estilo;
-        document.documentElement.style.setProperty("--pri", ESTILOS[estilo].color);
+      const ejemplosNombre = { spa: "Spa Luna", barberia: "Barbería El Clásico", consultorio: "Consultorio Dra. Ruiz", odontologia: "Sonrisa Dental", taxi: "Taxis Express", veterinaria: "Veterinaria Huellitas", gimnasio: "Studio Fit", lavadero: "Lavadero El Brillo" };
+      const vistaPrevia = () => {
+        const r = RUBROS[f0.rubro.value];
+        document.documentElement.dataset.estilo = r.estilo;
+        document.documentElement.style.setProperty("--pri", ESTILOS[r.estilo].color);
         const asis = cu.querySelector("#asis-ini");
-        if (Object.values(ESTILOS).some((e) => e.asistente === asis.value)) asis.value = ESTILOS[estilo].asistente;
-      });
-      cu.querySelector("#f").onsubmit = (ev) => {
+        if (Object.values(RUBROS).some((x) => x.asistente === asis.value)) asis.value = r.asistente;
+        cu.querySelector("#nombre-ini").placeholder = "Ej. " + (ejemplosNombre[f0.rubro.value] || "Mi negocio");
+      };
+      cu.querySelectorAll('input[name="rubro"]').forEach((i) => i.addEventListener("change", vistaPrevia));
+      vistaPrevia();
+      f0.onsubmit = (ev) => {
         ev.preventDefault();
         const d = datosForm(ev.target);
         const p = PAISES[d.pais];
-        const estilo = d.tipo === "barberia" ? "barberia" : "belleza";
+        const r = rubroDe({ rubro: d.rubro });
         guardarConfig({
           nombre: d.nombre.trim(),
-          asistente: d.asistente.trim() || ESTILOS[estilo].asistente,
-          estilo,
-          colorPrimario: ESTILOS[estilo].color,
-          mensajes: { ...ESTILOS[estilo].mensajes },
-          tipoNegocio: d.tipo,
+          rubro: r.id,
+          tipoNegocio: r.id,
+          estilo: r.estilo,
+          asistente: d.asistente.trim() || r.asistente,
+          colorPrimario: ESTILOS[r.estilo].color,
+          mensajes: { ...r.mensajes },
+          ...(r.modo === "viajes" ? { pedirCedula: false, horasMinCancelacion: 0 } : {}),
           pais: d.pais,
           monedaPrincipal: p.moneda,
           monedas: p.monedas,
@@ -832,13 +876,13 @@ export function asistenteInicial() {
         if (ev.target.ejemplos.checked) {
           const factor = { COP: 1, USD: 1 / 4000, MXN: 1 / 220, PEN: 1 / 1100 }[p.moneda] ?? 1 / 4000;
           const b = lote();
-          PLANTILLAS[d.tipo].forEach(([nombre, duracion, precio, categoria, palabrasClave], i) => {
-            const valor = p.moneda === "COP" ? precio : Math.max(1, Math.round(precio * factor));
+          r.servicios.forEach(([nombre, duracion, precio, categoria, palabrasClave], i) => {
+            const valor = p.moneda === "COP" || !precio ? precio : Math.max(1, Math.round(precio * factor));
             b.set("servicios", nuevoId("servicios"), { nombre, duracion, precio: valor, categoria, palabrasClave, orden: i + 1, activo: true }, false);
           });
           b.commit();
         }
-        toast("¡Listo! Tu agenda está creada 🎉", "ok", 5000);
+        toast(r.modo === "viajes" ? "¡Listo! Tu central de taxis está creada 🚕" : "¡Listo! Tu agenda está creada 🎉", "ok", 5000);
         cerrar();
       };
     },

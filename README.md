@@ -2,6 +2,8 @@
 
 **App publicada:** https://reservoapp.netlify.app · Firebase: `reservoapp-d0cca`
 
+Agenda, clientes, caja y bot de WhatsApp para spas, barberías, consultorios, veterinarias, gimnasios, talleres, asesorías, **líneas de taxis** y más.
+
 Software para **spa, peluquería, barbería y uñas**: agenda de citas, bot de
 WhatsApp que agenda y cancela solo, base de datos de clientes, caja con
 apertura/cierre y arqueo, reportes semanales y mensuales, multimoneda
@@ -26,6 +28,30 @@ app y **trabaja sin internet**.
 | 📊 **Reportes / arqueo semanal y mensual** | Hoy, esta semana, semana pasada, este mes, mes pasado o rango libre: ingresos, gastos, utilidad, ticket promedio, inasistencia, citas por WhatsApp, clientes nuevos, ingresos por día, arqueo por moneda, cierres, métodos de pago, servicios más vendidos, **comisiones por profesional**, gastos por categoría, mejores clientes, horas más pedidas. Excel e imprimir. |
 | ⚙️ **Personalización** | Nombre, logo, color, dirección; **monedas que maneja y tasas de cambio**; métodos de pago (Nequi, Daviplata, Pago móvil, Zelle, Binance…); horario por día, almuerzo y feriados; intervalos, anticipación, horas mínimas para cancelar; servicios (precio, duración, palabras clave para el bot); profesionales (servicios que hacen, comisión); **todos los mensajes del bot editables**; simulador para probar el bot. |
 | 📴 **Sin internet** | Abre sin conexión mostrando lo último sincronizado (el indicador dice “Sin internet · datos de las 3:40 pm”). Todo lo que hagas se guarda en el teléfono y **se sube solo** cuando vuelve la señal. |
+
+### 🏪 Sirve para muchos tipos de negocio
+
+Al crear la cuenta se elige el tipo de negocio y Reservo se adapta: cómo se
+llama lo que se agenda, cómo se llama a quien llega y al equipo, el tono del
+bot de WhatsApp, el estilo visual y los servicios de ejemplo.
+
+| Tipo | Se agenda | Llega un… | Equipo | Estilo |
+|---|---|---|---|---|
+| 💆 Spa / estética · 💇 Peluquería · 💅 Uñas | cita | cliente | profesionales / estilistas / manicuristas | Rosa |
+| 💈 Barbería · 🖋️ Tatuajes | turno / cita | cliente | barberos / tatuadores | Carbón y dorado |
+| 🩺 Consultorio · 🦷 Odontología | consulta / cita | paciente | médicos / odontólogos | Salud (verde calma) |
+| 🧠 Psicología · 🦴 Fisioterapia | sesión | paciente | terapeutas / fisioterapeutas | Salud |
+| 🐾 Veterinaria · 🏋️ Gimnasio · 🚗 Lavadero/taller · 💼 Asesorías | cita / clase / turno | cliente / alumno | veterinarios / instructores / operarios / asesores | Profesional (índigo) |
+| 🚕 **Línea de taxis** | viaje | pasajero | conductores (placa y vehículo) | Taxis (amarillo con cuadros) |
+
+**Línea de taxis:** el pasajero escribe "necesito un taxi", envía su
+📍 ubicación de WhatsApp (o escribe la dirección) y su destino. El pedido
+suena en la **Central**; la central asigna el conductor y el tiempo de
+llegada, y el pasajero recibe por WhatsApp *"🚕 Tu taxi va en camino —
+Conductor Juan · Placa ABC123 · llega en ~5 min"*. Luego "Ya llegó" y
+"Terminar y cobrar". También se pueden programar taxis ("mañana a las 5 am")
+y tomar pedidos por teléfono. El aviso al pasajero usa la función
+`/api/avisar-cliente` (no requiere variables nuevas).
 
 ### 💈 Dos estilos: Spa y Barbería
 

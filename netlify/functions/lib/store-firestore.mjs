@@ -115,6 +115,14 @@ export async function crearStoreFirestore(negocioId) {
       });
     },
 
+    // Pedido de taxi: no ocupa un cupo de agenda; la central asigna
+    // el conductor desde la app.
+    async crearViaje(viaje) {
+      const ref = raiz.collection("citas").doc();
+      await ref.set({ ...viaje, creado: FieldValue.serverTimestamp(), creadoMs: Date.now(), recordatorioEnviado: false });
+      return ref.id;
+    },
+
     async citasFuturasDeClientes(ids, desde) {
       if (!ids.length) return [];
       const s = await raiz.collection("citas").where("clienteId", "in", ids.slice(0, 30)).get();

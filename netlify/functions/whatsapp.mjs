@@ -73,7 +73,14 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
 
   let texto = "";
   let opcionId = null;
+  let ubicacion = null;
   if (mensaje.type === "text") texto = mensaje.text?.body || "";
+  else if (mensaje.type === "location") {
+    // Ubicación compartida desde WhatsApp (pedir taxi, domicilios...)
+    const l = mensaje.location || {};
+    ubicacion = { lat: l.latitude, lng: l.longitude, nombre: l.name || "", direccion: l.address || "" };
+    texto = [l.name, l.address].filter(Boolean).join(" ");
+  }
   else if (mensaje.type === "interactive") {
     const r = mensaje.interactive?.button_reply || mensaje.interactive?.list_reply;
     opcionId = r?.id || null;
@@ -94,7 +101,7 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
   let mensajes;
   try {
     const store = await crearStoreFirestore(negocioId);
-    ({ mensajes } = await procesarMensaje({ telefono: mensaje.from, nombrePerfil, texto, opcionId }, store, {
+    ({ mensajes } = await procesarMensaje({ telefono: mensaje.from, nombrePerfil, texto, opcionId, ubicacion }, store, {
       marcaTiempo: Number(mensaje.timestamp) * 1000 || Date.now(),
     }));
   } catch (e) {

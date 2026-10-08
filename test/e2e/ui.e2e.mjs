@@ -63,13 +63,20 @@ try {
   await foto("asistente");
   await page.fill('input[name="nombre"]', "Spa Luna");
   await page.selectOption('select[name="pais"]', "VE");
-  const BARBERIA = process.env.ESTILO === "barberia";
-  if (BARBERIA) await page.selectOption('select[name="tipo"]', "barberia");
+  const RUBRO = process.env.RUBRO || (process.env.ESTILO === "barberia" ? "barberia" : "spa");
+  const BARBERIA = RUBRO === "barberia";
+  await page.check(`input[name="rubro"][value="${RUBRO}"]`, { force: true });
   await page.click("text=Empezar");
   await page.waitForTimeout(300);
   ok((await page.textContent("[data-nombre-negocio]")).includes("Spa Luna"), "nombre del negocio aplicado");
   const nServ = await page.evaluate(() => window.__agenda.E.servicios.length);
-  ok(nServ === (BARBERIA ? 7 : 5), "servicios de ejemplo creados (" + nServ + ")");
+  const esperados = { spa: 5, barberia: 7, consultorio: 5, odontologia: 5, gimnasio: 4, veterinaria: 4 }[RUBRO];
+  ok(nServ === esperados, "servicios de ejemplo creados (" + nServ + ")");
+  if (RUBRO === "consultorio") {
+    ok((await page.textContent('#nav a[data-tab="clientes"]')).includes("Pacientes"), "el menú dice Pacientes");
+    ok((await page.textContent(".fab")).includes("Consulta"), "el botón dice + Consulta");
+    ok((await page.evaluate(() => document.documentElement.dataset.estilo)) === "salud", "estilo salud aplicado");
+  }
   if (BARBERIA) {
     ok((await page.evaluate(() => document.documentElement.dataset.estilo)) === "barberia", "estilo barbería aplicado");
     ok((await page.getAttribute("[data-logo]", "src")).includes("icon-barber"), "ícono de barbería");
@@ -103,7 +110,7 @@ try {
   ok((await page.$$(".cita")).length === 1, "la cita aparece en la agenda");
   ok((await page.evaluate(() => window.__agenda.E.clientes.length)) === 1, "cliente creado");
   await page.waitForSelector(".celebracion-cliente", { timeout: 3000 });
-  ok((await page.textContent(".celebracion-cliente")).includes(BARBERIA ? "en la silla" : "María"), "celebración de cliente nuevo");
+  ok((await page.textContent(".celebracion-cliente")).includes(BARBERIA ? "en la silla" : RUBRO === "consultorio" ? "paciente" : "María"), "celebración de cliente nuevo");
   await foto("celebra-cliente");
   await foto("agenda-con-cita");
 
@@ -124,7 +131,7 @@ try {
   ok((await page.evaluate(() => window.__agenda.E.citas[0].estado)) === "completada", "cita marcada como cobrada");
   await page.waitForSelector(".celebracion-pago", { timeout: 3000 });
   const textoPago = await page.textContent(".celebracion-pago");
-  ok(textoPago.includes(BARBERIA ? "Billete a la caja" : "Pago recibido") && /US\$ \d/.test(textoPago), "una sola celebración con el total del pago mixto: " + textoPago.trim().replace(/\s+/g, " "));
+  ok(textoPago.includes(BARBERIA ? "Billete a la caja" : RUBRO === "consultorio" ? "Pago registrado" : "Pago recibido") && /US\$ \d/.test(textoPago), "una sola celebración con el total del pago mixto: " + textoPago.trim().replace(/\s+/g, " "));
   await foto("celebra-pago");
 
   // 4) Caja: gasto y cierre con arqueo
@@ -185,7 +192,7 @@ try {
   await page.waitForTimeout(300);
   await foto("simulador");
   const textoChat = await page.textContent("#chat");
-  ok(textoChat.includes("Spa Luna") && textoChat.includes(BARBERIA ? "Max" : "Sofi"), "el bot saluda con el nombre del negocio y del asistente");
+  ok(textoChat.includes("Spa Luna") && textoChat.includes({ barberia: "Max", consultorio: "Clara", gimnasio: "Leo", veterinaria: "Toby" }[RUBRO] || "Sofi"), "el bot saluda con el nombre del negocio y del asistente");
   if (BARBERIA) ok(textoChat.includes("Bienvenido") && !textoChat.includes("Bienvenid@"), "el bot habla con tono de barbería");
   await page.keyboard.press("Escape");
 

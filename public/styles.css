@@ -790,3 +790,130 @@ main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--su
 @media (min-width: 900px) { .marca-agua { bottom: 18px; left: 18px; font-size: 12px; } }
 @media print { .marca-agua { display: flex !important; position: static; margin-top: 16px; } }
 :root[data-estilo] .login .login-lema, :root[data-estilo] .login h2 { text-transform: none; letter-spacing: -0.01em; font-family: var(--fuente-reservo); }
+
+/* ---------- Central de taxis ---------- */
+.solicitudes { margin-bottom: 14px; border: 2px solid color-mix(in srgb, var(--alerta) 45%, transparent); background: color-mix(in srgb, var(--alerta-suave) 70%, #fff); }
+.solicitudes h3 { color: var(--alerta); }
+.solicitudes .cita { animation: aparece-suave .45s var(--rebote) backwards, latido-pedido 2.2s ease-in-out infinite; }
+@keyframes latido-pedido { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--alerta) 25%, transparent), var(--sombra); } }
+.vacio-solicitudes { margin-bottom: 14px; text-align: center; color: var(--suave); }
+.cita.viaje .q { font-size: 14px; }
+.conductores .conductor { cursor: pointer; border-radius: 12px; padding: 10px 8px; }
+.conductores .conductor:has(input:checked) { background: var(--pri-suave); }
+.conductores .conductor.ocupado { opacity: .75; }
+.conductores input[type="radio"] { width: 20px; height: 20px; }
+.eta { margin-top: 6px; }
+
+/* ============================================================
+   Estilo "Salud" — consultorios, odontología, terapia
+   Concepto: consultorio sereno. Verde azulado calmado, blancos
+   limpios, esquinas medias, sin brillos ni rebotes llamativos.
+   ============================================================ */
+:root[data-estilo="salud"] {
+  --fondo: #f1f6f6;
+  --texto: #15302f;
+  --suave: #5b7270;
+  --borde: #d8e6e5;
+  --pri-suave: color-mix(in srgb, var(--pri) 10%, #f7fbfb);
+  --rosa-polvo: #e3f2f0; --lila: #e6eef8; --durazno: #f6efe4; --menta: #e2f3ea; --cielo: #e5f0f9;
+  --radio: 16px;
+  --sombra: 0 1px 3px rgba(21, 48, 47, .06), 0 8px 22px rgba(21, 48, 47, .06);
+  --sombra-alta: 0 6px 16px rgba(21, 48, 47, .12), 0 16px 36px rgba(21, 48, 47, .10);
+  --rebote: cubic-bezier(.25, .8, .3, 1);
+  --fuente-titulo: "Nunito", -apple-system, "Segoe UI", sans-serif;
+}
+[data-estilo="salud"] body { background: radial-gradient(900px 500px at 100% -10%, rgba(15, 118, 110, .08), transparent 70%), var(--fondo); }
+[data-estilo="salud"] h1, [data-estilo="salud"] h2, [data-estilo="salud"] h3, [data-estilo="salud"] .titulo-fecha { font-weight: 800; letter-spacing: -0.01em; }
+[data-estilo="salud"] .btn { border-radius: 12px; }
+[data-estilo="salud"] .btn-pri, [data-estilo="salud"] .pestanas button.sel, [data-estilo="salud"] .tira-dias button.sel, [data-estilo="salud"] .fab {
+  background: var(--pri); box-shadow: 0 6px 16px color-mix(in srgb, var(--pri) 25%, transparent);
+}
+[data-estilo="salud"] .fab { animation: none; border-radius: 16px; }
+[data-estilo="salud"] .barra { box-shadow: 0 1px 0 var(--borde); }
+[data-estilo="salud"] .barra::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, var(--pri), #5eead4, var(--pri)); opacity: .55; }
+[data-estilo="salud"] .resumen-dia .kpi, [data-estilo="salud"] .kpis .kpi { background: var(--tarjeta) !important; border-left: 4px solid color-mix(in srgb, var(--pri) 60%, #fff); }
+[data-estilo="salud"] .avatar { background: color-mix(in srgb, var(--pri) 14%, #fff); color: var(--pri); }
+[data-estilo="salud"] .celebra-tarjeta { background: linear-gradient(160deg, #fff, #e3f2f0); }
+[data-estilo="salud"] .vacio .grande, [data-estilo="salud"] .tira-dias button.con-citas .p { animation: none; }
+
+/* ============================================================
+   Estilo "Profesional" — veterinarias, gimnasios, talleres,
+   asesorías. Índigo sobre gris frío, ordenado y neutro.
+   ============================================================ */
+:root[data-estilo="general"] {
+  --fondo: #f4f5fa;
+  --texto: #1e1b3a;
+  --suave: #626080;
+  --borde: #e2e3ef;
+  --pri-suave: color-mix(in srgb, var(--pri) 10%, #f8f8fe);
+  --rosa-polvo: #eceafe; --lila: #e9e7fb; --durazno: #fdf0e3; --menta: #e3f5ec; --cielo: #e6f0fd;
+  --radio: 14px;
+  --rebote: cubic-bezier(.3, 1.3, .6, 1);
+  --fuente-titulo: "Nunito", -apple-system, "Segoe UI", sans-serif;
+}
+[data-estilo="general"] body { background: radial-gradient(900px 500px at 100% -10%, rgba(79, 70, 229, .08), transparent 70%), var(--fondo); }
+[data-estilo="general"] h1, [data-estilo="general"] h2, [data-estilo="general"] h3, [data-estilo="general"] .titulo-fecha { font-weight: 800; }
+[data-estilo="general"] .btn { border-radius: 12px; }
+[data-estilo="general"] .btn-pri, [data-estilo="general"] .pestanas button.sel, [data-estilo="general"] .tira-dias button.sel, [data-estilo="general"] .fab {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pri) 80%, #818cf8), var(--pri));
+}
+[data-estilo="general"] .fab { border-radius: 16px; }
+
+/* ============================================================
+   Estilo "Taxis" — líneas de taxis y transporte
+   Concepto: el taxi amarillo con su franja de cuadros. Barra
+   amarilla con texto negro, botones negros, todo grande y claro
+   para usar rápido en la central.
+   ============================================================ */
+:root[data-estilo="taxi"] {
+  --fondo: #f5f4ef;
+  --texto: #18181b;
+  --suave: #5f5d55;
+  --borde: #e2dfd3;
+  --amarillo: #f5b800;
+  --amarillo-claro: #fff4c2;
+  --pri-suave: #fff4c2;
+  --rosa-polvo: #fff4c2; --lila: #eceef2; --durazno: #fdecd3; --menta: #e3f3e9; --cielo: #e6eef8;
+  --radio: 12px;
+  --rebote: cubic-bezier(.2, .9, .3, 1.1);
+  --fuente-titulo: "Barlow", "Nunito", -apple-system, sans-serif;
+  --cuadros: repeating-conic-gradient(#18181b 0 25%, #ffffff 0 50%) 0 0 / 12px 12px;
+}
+[data-estilo="taxi"] body { background: var(--fondo); }
+[data-estilo="taxi"] h1, [data-estilo="taxi"] h2, [data-estilo="taxi"] h3, [data-estilo="taxi"] .titulo-fecha { font-weight: 800; }
+[data-estilo="taxi"] .barra { background: var(--amarillo); color: #18181b; box-shadow: none; position: sticky; }
+[data-estilo="taxi"] .barra::after { content: ""; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px; background: var(--cuadros); }
+[data-estilo="taxi"] .barra .btn-icono { color: #18181b; }
+[data-estilo="taxi"] .logo-chico { border-radius: 8px; box-shadow: 0 0 0 2px #18181b; }
+[data-estilo="taxi"] main#contenido { padding-top: 26px; }
+[data-estilo="taxi"] .btn { border-radius: 10px; font-weight: 800; }
+[data-estilo="taxi"] .btn-pri, [data-estilo="taxi"] .pestanas button.sel, [data-estilo="taxi"] .tira-dias button.sel, [data-estilo="taxi"] .horas-grid button.sel {
+  background: #18181b; color: var(--amarillo); box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+}
+[data-estilo="taxi"] .fab { background: #18181b; color: var(--amarillo); border-radius: 14px; box-shadow: 0 0 0 3px var(--amarillo), 0 10px 24px rgba(0, 0, 0, .3); animation: none; }
+[data-estilo="taxi"] .nav a.activo { background: var(--amarillo-claro); color: #18181b; }
+[data-estilo="taxi"] .resumen-dia .kpi, [data-estilo="taxi"] .kpis .kpi { background: var(--tarjeta) !important; border-top: 4px solid var(--amarillo); }
+[data-estilo="taxi"] .avatar { background: var(--amarillo); color: #18181b; }
+[data-estilo="taxi"] .solicitudes { border-color: var(--amarillo); background: var(--amarillo-claro); }
+[data-estilo="taxi"] .solicitudes h3 { color: #18181b; }
+[data-estilo="taxi"] .celebra-tarjeta { background: #18181b; box-shadow: inset 0 -5px 0 var(--amarillo), 0 18px 40px rgba(0, 0, 0, .3); }
+[data-estilo="taxi"] .celebra-titulo { color: #fff; }
+[data-estilo="taxi"] .celebra-detalle { color: var(--amarillo); }
+[data-estilo="taxi"][data-fondo] .barra { background: var(--amarillo); color: #18181b; }
+
+/* ---------- Asistente inicial: tarjetas de tipo de negocio ---------- */
+.rubros-campo { border: 0; padding: 0; margin: 0; }
+.rubros-campo legend { font-size: 13px; font-weight: 700; color: #4a4650; margin-bottom: 8px; }
+.rubros { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.rubro-op {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+  padding: 12px 6px 10px; border: 2px solid var(--borde); border-radius: 16px; background: #fff; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--texto); line-height: 1.2;
+  transition: transform .2s var(--rebote), border-color .2s, box-shadow .2s;
+}
+.rubro-op:hover { transform: translateY(-2px); box-shadow: var(--sombra); }
+.rubro-op input { position: absolute; opacity: 0; pointer-events: none; }
+.rubro-op:has(input:checked) { border-color: var(--pri); background: var(--pri-suave); box-shadow: 0 6px 16px color-mix(in srgb, var(--pri) 20%, transparent); }
+.rubro-op:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--pri) 45%, transparent); }
+.rubro-ico { font-size: 28px; line-height: 1.1; }
+.conductores label.conductor { flex-direction: row; align-items: center; gap: 12px; font-size: 15px; font-weight: 500; color: var(--texto); }

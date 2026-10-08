@@ -23,9 +23,11 @@ import {
   ESTADOS_QUE_OCUPAN,
   citasEnConflicto,
   estiloDe,
+  vocabularioDe,
 } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales } from "../ui.js";
 import { cobrarCita, deshacerCobro } from "./cobro.js";
+import { tarjetaViaje, panelSolicitudes, detalleViaje, asignarConductor, formularioViaje } from "./viajes.js";
 
 export const ESTADOS = {
   pendiente: "Pendiente",
@@ -71,6 +73,7 @@ function citasDelDia(f) {
 let enConflicto = new Set();
 
 function tarjetaCita(c) {
+  if (c.tipo === "viaje") return tarjetaViaje(c);
   const prof = E.profesionales.find((p) => p.id === c.profesionalId);
   const color = prof ? colorProf(prof, E.profesionales.indexOf(prof)) : E.servicios.find((s) => s.id === c.servicioId)?.color || "var(--pri)";
   const fin = deMinutos(aMinutos(c.hora) + (Number(c.duracion) || 30));
@@ -91,12 +94,16 @@ function tarjetaCita(c) {
 
 function pintar() {
   if (!cont) return;
+  const V = vocabularioDe(E.config);
   const h = hoy();
   const lunes = inicioSemana(fecha);
   const semana = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
-  const citas = citasDelDia(fecha);
-  enConflicto = citasEnConflicto(citas, E.config, E.profesionales);
-  const activas = citas.filter((c) => c.estado !== "cancelada");
+  // En la central de taxis, los pedidos sin conductor van solo en el
+  // panel de arriba (no se repiten en la lista del día)
+  const todasDelDia = citasDelDia(fecha);
+  const citas = todasDelDia.filter((c) => !(V.viajes && c.tipo === "viaje" && c.estado === "pendiente" && !c.programado));
+  enConflicto = citasEnConflicto(citas.filter((c) => c.tipo !== "viaje"), E.config, E.profesionales);
+  const activas = todasDelDia.filter((c) => c.estado !== "cancelada");
   const base = E.config.monedaPrincipal;
   const cobrado = E.movimientos.filter((m) => m.fecha === fecha && m.tipo === "ingreso").reduce((s, m) => s + (Number(m.montoBase) || 0), 0);
   const porCobrar = activas.filter((c) => ["pendiente", "confirmada"].includes(c.estado)).reduce((s, c) => s + (Number(c.precio) || 0), 0);
@@ -105,8 +112,8 @@ function pintar() {
 
   let cuerpo;
   if (!citas.length) {
-    cuerpo = `<div class="tarjeta vacio"><span class="grande">${horario ? "🗓️" : "🌙"}</span>${horario ? "No hay citas este día." : "Este día el negocio está cerrado."}<br><br>
-      <button class="btn btn-pri" data-nueva>+ Agendar cita</button></div>`;
+    cuerpo = `<div class="tarjeta vacio"><span class="grande">${horario ? "🗓️" : "🌙"}</span>${horario ? `No hay ${V.citas} este día.` : "Este día el negocio está cerrado."}<br><br>
+      <button class="btn btn-pri" data-nueva>+ ${V.viajes ? "Registrar pedido" : "Agendar " + V.cita}</button></div>`;
   } else if (profesActivos.length > 1) {
     // Una columna por profesional (en computador quedan lado a lado)
     const grupos = profesActivos.map((p, i) => ({ p, i, citas: citas.filter((c) => c.profesionalId === p.id) }));
@@ -151,11 +158,12 @@ function pintar() {
         .join("")}
     </div>
     <div class="resumen-dia">
-      <div class="kpi"><div class="v">${activas.length}</div><div class="t">Citas</div></div>
+      <div class="kpi"><div class="v">${activas.length}</div><div class="t">${V.Citas}</div></div>
       <div class="kpi"><div class="v">${activas.filter((c) => c.estado === "completada").length}</div><div class="t">Atendidas</div></div>
       <div class="kpi"><div class="v">${formatoMoneda(porCobrar, base)}</div><div class="t">Por cobrar</div></div>
       <div class="kpi"><div class="v">${formatoMoneda(cobrado, base)}</div><div class="t">Cobrado</div></div>
     </div>
+    ${V.viajes ? panelSolicitudes() : ""}
     ${
       enConflicto.size
         ? `<div class="tarjeta aviso-cruce" role="alert">⚠️ <b>${enConflicto.size} citas se cruzan</b> en el mismo horario. Toca una para moverla a otra hora o asignarla a otra persona.</div>`
@@ -163,18 +171,26 @@ function pintar() {
     }
     ${cuerpo}
     ${
-      libres.length && horario
+      libres.length && horario && !V.viajes
         ? `<details class="seccion"><summary class="negrita" style="cursor:pointer">🕒 Horas libres (${libres.length})</summary>
             <div class="horas-grid" style="margin-top:8px">${libres.map((x) => `<button data-hueco="${x}">${hora12(x)}</button>`).join("")}</div></details>`
         : ""
     }
-    <button class="fab" data-nueva>+ Cita</button>`;
+    <button class="fab" data-nueva>+ ${V.viajes ? "Pedido" : V.Cita}</button>`;
 
   cont.querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => irA(b.dataset.ir)));
   cont.querySelector("#fecha-sel").onchange = (e) => e.target.value && irA(e.target.value);
   cont.querySelectorAll("[data-nueva]").forEach((b) => (b.onclick = () => formularioCita({ fecha })));
   cont.querySelectorAll("[data-hueco]").forEach((b) => (b.onclick = () => formularioCita({ fecha, hora: b.dataset.hueco })));
   cont.querySelectorAll("[data-cita]").forEach((el) => (el.onclick = () => detalleCita(el.dataset.cita)));
+  cont.querySelectorAll("[data-asignar]").forEach(
+    (b) =>
+      (b.onclick = (ev) => {
+        ev.stopPropagation();
+        const c = E.citas.find((x) => x.id === b.dataset.asignar);
+        if (c) asignarConductor(c);
+      })
+  );
 }
 
 // ------------------------------------------------------------
@@ -191,6 +207,7 @@ export function linkWhatsapp(telefono, texto = "") {
 export function detalleCita(id) {
   const c = E.citas.find((x) => x.id === id);
   if (!c) return;
+  if (c.tipo === "viaje") return detalleViaje(c);
   const cliente = E.clientes.find((x) => x.id === c.clienteId);
   const base = E.config.monedaPrincipal;
   const recordatorio = rellenar(E.config.mensajes.recordatorio, {
@@ -289,6 +306,8 @@ export function detalleCita(id) {
 // Formulario: nueva cita / editar cita
 // ------------------------------------------------------------
 export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clienteId = "" } = {}) {
+  const V = vocabularioDe(E.config);
+  if (V.viajes && !cita) return formularioViaje();
   if (!E.servicios.filter((s) => s.activo !== false).length) {
     toast("Primero crea tus servicios en Ajustes → Servicios", "error", 5000);
     location.hash = "ajustes/servicios";
@@ -305,7 +324,7 @@ export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clien
   const cli = E.clientes.find((c) => c.id === sel.clienteId);
 
   abrirModal({
-    titulo: editando ? "Editar cita" : "Nueva cita",
+    titulo: editando ? `Editar ${V.cita}` : V.nuevaCita,
     html: `
       <form id="f-cita">
         <label>Cliente
@@ -341,7 +360,7 @@ export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clien
         </div>
         <label>Notas de la cita<textarea name="notas" placeholder="Ej. trae su propio tinte">${esc(cita?.notas || "")}</textarea></label>
         <p class="error" id="err"></p>
-        <button class="btn btn-pri btn-bloque" type="submit">${editando ? "Guardar cambios" : "Agendar cita"}</button>
+        <button class="btn btn-pri btn-bloque" type="submit">${editando ? "Guardar cambios" : "Agendar " + V.cita}</button>
       </form>`,
     onAbrir(cu, cerrar) {
       const form = cu.querySelector("#f-cita");
@@ -530,7 +549,7 @@ export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clien
         } else {
           guardar("citas", nuevoId("citas"), { ...data, estado: "confirmada", origen: "app", recordatorioEnviado: false, creado: serverTimestamp() }, false);
         }
-        toast(choca ? "Cita guardada (⚠️ se cruza con otra cita)" : editando ? "Cita actualizada ✅" : "Cita agendada ✅");
+        toast(choca ? `${V.Cita} guardada (⚠️ se cruza con otra)` : editando ? "Cambios guardados ✅" : `${V.Cita} ${V.agendada} ✅`);
         cerrar();
         if (cont?.isConnected) irA(data.fecha);
       };

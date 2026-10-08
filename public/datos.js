@@ -308,3 +308,21 @@ export function datosCliente(data) {
 export const cajaAbierta = () => E.cajas.find((c) => c.estado === "abierta") || null;
 
 export { doc, setDoc, deleteDoc, collection };
+
+// Le avisa al cliente por WhatsApp un cambio de su servicio (ej. "tu
+// taxi va en camino"). Necesita internet y WhatsApp conectado.
+export async function avisarCliente(citaId, evento) {
+  if (!navigator.onLine) throw new Error("Sin internet: el aviso al cliente no se pudo enviar.");
+  const token = await auth?.currentUser?.getIdToken?.();
+  const r = await fetch("/api/avisar-cliente", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token || ""}` },
+    body: JSON.stringify({ citaId, evento }),
+  });
+  let cuerpo = {};
+  try {
+    cuerpo = await r.json();
+  } catch {}
+  if (!r.ok) throw new Error(cuerpo.error || "No se pudo avisar al cliente");
+  return cuerpo;
+}

@@ -6,7 +6,7 @@
 // ============================================================
 import { E, ahora } from "../datos.js";
 import { procesarMensaje } from "../bot.js";
-import { nombresParecidos, soloDigitos } from "../core.js";
+import { nombresParecidos, soloDigitos, vocabularioDe } from "../core.js";
 import { abrirModal, esc } from "../ui.js";
 
 function formatoWhatsapp(t) {
@@ -57,6 +57,11 @@ function crearStorePrueba(telefono) {
       db.citas.push({ id, ...d });
       return id;
     },
+    async crearViaje(d) {
+      const id = "prueba-viaje-" + ++n;
+      db.citas.push({ id, ...d });
+      return id;
+    },
     async citasFuturasDeClientes(ids, desde) {
       return db.citas.filter((c) => ids.includes(c.clienteId) && c.fecha >= desde);
     },
@@ -78,6 +83,7 @@ export function abrirSimulador() {
       <p class="ayuda">Escribe como lo haría un cliente, por ejemplo: <i>“hola quiero una cita para el jueves a las 3”</i> o <i>“quiero cancelar mi cita”</i>. Es una prueba: no se guarda nada.</p>
       <label class="check peq"><input type="checkbox" id="sim-nuevo" checked /> Simular un cliente nuevo (número desconocido)</label>
       <div class="wa" id="chat"></div>
+      ${vocabularioDe(E.config).viajes ? '<button type="button" class="btn btn-sec btn-chico" id="sim-ubic" style="margin-top:8px">📍 Enviar mi ubicación (prueba)</button>' : ""}
       <form class="wa-entrada" id="sim-f" style="flex-direction:row">
         <input id="sim-txt" placeholder="Escribe un mensaje" autocomplete="off" />
         <button class="btn btn-pri">➤</button>
@@ -99,10 +105,10 @@ export function abrirSimulador() {
         chat.insertAdjacentHTML("beforeend", `<div class="burb ${clase}">${html}</div>`);
         chat.scrollTop = chat.scrollHeight;
       };
-      const enviar = async (texto, opcionId = null, etiqueta = null) => {
+      const enviar = async (texto, opcionId = null, etiqueta = null, ubicacion = null) => {
         burbuja(esc(etiqueta || texto), "yo");
         chat.querySelectorAll(".ops button").forEach((b) => (b.disabled = true));
-        const { mensajes } = await procesarMensaje({ telefono, texto, opcionId, nombrePerfil: "Cliente de prueba" }, store, { ahora: ahora() });
+        const { mensajes } = await procesarMensaje({ telefono, texto, opcionId, ubicacion, nombrePerfil: "Cliente de prueba" }, store, { ahora: ahora() });
         for (const m of mensajes) {
           burbuja(formatoWhatsapp(m.texto), "bot");
           const ops = m.botones || m.filas;
@@ -124,6 +130,9 @@ export function abrirSimulador() {
         enviar(t);
       };
       cu.querySelector("#sim-reiniciar").onclick = reiniciar;
+      cu.querySelector("#sim-ubic")?.addEventListener("click", () =>
+        enviar("", null, "📍 Ubicación: Cra 7 # 32-16, Bogotá", { lat: 4.6097, lng: -74.0817, nombre: "", direccion: "Cra 7 # 32-16, Bogotá" })
+      );
       cu.querySelector("#sim-nuevo").onchange = reiniciar;
       reiniciar();
       input.focus();

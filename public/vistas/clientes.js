@@ -2,7 +2,7 @@
 // Clientes: base de datos, visitas por mes, historial y notas
 // ============================================================
 import { E, hoy, guardar, borrar, nuevoId, citasDeCliente, serverTimestamp, datosCliente } from "../datos.js";
-import { formatoMoneda, fechaCorta, hora12, normalizar, soloDigitos, MESES, sumarDias, inicioMes } from "../core.js";
+import { vocabularioDe, formatoMoneda, fechaCorta, hora12, normalizar, soloDigitos, MESES, sumarDias, inicioMes } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales, descargar, aCSV } from "../ui.js";
 import { formularioCita, linkWhatsapp, ESTADOS } from "./agenda.js";
 
@@ -29,9 +29,10 @@ function visitasDelMes(clienteId, mes = hoy().slice(0, 7)) {
 }
 
 function pintarBase() {
+  const V = vocabularioDe(E.config);
   cont.innerHTML = `
     <div class="cab-vista">
-      <h2>Clientes <span class="suave peq" id="cuenta"></span></h2>
+      <h2>${V.Clientes} <span class="suave peq" id="cuenta"></span></h2>
       <div class="fila">
         <button class="btn btn-sec btn-chico" id="exportar">⬇️ Excel</button>
       </div>
@@ -49,7 +50,7 @@ function pintarBase() {
       </select>
     </div>
     <div class="tarjeta" style="padding:4px 12px"><div class="lista" id="lista"></div></div>
-    <button class="fab" id="nuevo">+ Cliente</button>`;
+    <button class="fab" id="nuevo">+ ${V.Cliente}</button>`;
   cont.querySelector("#orden").value = orden;
   cont.querySelector("#buscar").addEventListener("input", (e) => {
     busqueda = e.target.value;
@@ -86,6 +87,7 @@ function filtrados() {
 }
 
 function pintarLista() {
+  const V = vocabularioDe(E.config);
   if (!cont?.querySelector("#lista")) return;
   const lista = filtrados();
   cont.querySelector("#cuenta").textContent = `(${E.clientes.length})`;
@@ -107,7 +109,7 @@ function pintarLista() {
         </div>
       </div>`
       )
-      .join("") || `<p class="vacio"><span class="grande">👥</span>${busqueda ? "No se encontró ningún cliente." : "Aún no tienes clientes. Se crean solos al agendar (también desde WhatsApp) o con el botón “+ Cliente”."}</p>`;
+      .join("") || `<p class="vacio"><span class="grande">👥</span>${busqueda ? "No se encontró a nadie con esa búsqueda." : `Aún no tienes ${V.clientes}. Se crean solos al agendar (también desde WhatsApp) o con el botón “+ ${V.Cliente}”.`}</p>`;
   cont.querySelectorAll("[data-id]").forEach((el) => (el.onclick = () => fichaCliente(el.dataset.id)));
 }
 
@@ -202,8 +204,9 @@ export async function fichaCliente(id) {
 // Crear / editar cliente
 // ------------------------------------------------------------
 export function formularioCliente(c = null) {
+  const V = vocabularioDe(E.config);
   abrirModal({
-    titulo: c ? "Editar cliente" : "Nuevo cliente",
+    titulo: c ? `Editar ${V.cliente}` : `Nuevo ${V.cliente}`,
     html: `<form id="f-cli">
       <label>Nombre y apellido<input name="nombre" required value="${esc(c?.nombre || "")}" autocomplete="off" /></label>
       <div class="dos-col">

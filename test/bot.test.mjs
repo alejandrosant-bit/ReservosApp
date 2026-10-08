@@ -271,3 +271,113 @@ test("fondo personalizado: la letra siempre se lee", async () => {
   assert.equal(tintaParaFondo("#fbf4f7").oscuro, false);
   assert.equal(tintaParaFondo("rojo"), null);
 });
+
+// ------------------------------------------------------------
+// Tipos de negocio: el bot cambia sus palabras y su tono
+// ------------------------------------------------------------
+test("consultorio: habla de consultas y pacientes, con tono profesional", async () => {
+  const servicios = [{ id: "m1", nombre: "Consulta medicina general", duracion: 30, precio: 70000, palabrasClave: "medico, general" }];
+  const store = crearStoreMemoria({ config: { nombre: "Consultorio Dra. Ruiz", rubro: "consultorio" }, servicios });
+  let r = await enviar(store, "buenas tardes necesito una consulta para el jueves a las 3");
+  assert.match(todoTexto(r), /Te damos la bienvenida a \*Consultorio Dra\. Ruiz\*/);
+  assert.match(todoTexto(r), /Clara/);
+  assert.match(todoTexto(r), /Para agendar tu consulta/);
+  await enviar(store, "Pedro Gómez");
+  r = await enviar(store, "79123456");
+  assert.match(todoTexto(r), /Confirmo tu consulta/);
+  r = await enviar(store, "si");
+  assert.match(todoTexto(r), /consulta quedó agendada/);
+  assert.match(todoTexto(r), /documento de identidad/);
+  r = await enviar(store, "hola");
+  assert.ok(r.mensajes.at(-1).botones.some((b) => /Agendar consulta/.test(b.titulo)));
+});
+
+test("cada tipo de negocio arma sus mensajes sin variables sueltas", async () => {
+  const { RUBROS, conDefectos, rellenar } = await import("../public/core.js");
+  for (const id of Object.keys(RUBROS)) {
+    const c = conDefectos({ rubro: id });
+    for (const [k, m] of Object.entries(c.mensajes)) {
+      assert.ok(m && typeof m === "string", `${id}.${k}`);
+      const t = rellenar(m, { negocio: "N", asistente: "A", cliente: "C", cliente_coma: ", C", servicio: "S", fecha: "F", hora: "H", direccion: "D", horas_cancelacion: 2, profesional_linea: "", origen: "O", destino: "X", cuando: "ya", conductor: "J", placa: "P", vehiculo: "V", eta: 5 });
+      assert.ok(!/undefined|\[object/.test(t), `${id}.${k}: ${t}`);
+    }
+    assert.ok(RUBROS[id].servicios.length >= 3, id);
+  }
+});
+
+// ------------------------------------------------------------
+// Línea de taxis
+// ------------------------------------------------------------
+const SERV_TAXI = [
+  { id: "t1", nombre: "Viaje en la ciudad", duracion: 30, precio: 9000, palabrasClave: "taxi" },
+  { id: "t2", nombre: "Viaje al aeropuerto", duracion: 60, precio: 45000, palabrasClave: "aeropuerto" },
+];
+const taxi = (store, extra) => procesarMensaje({ telefono: "573005556677", texto: "", ...extra }, store, { ahora: AHORA });
+
+test("taxi: pedir ya con dirección escrita", async () => {
+  const store = crearStoreMemoria({ config: { nombre: "Taxis Express", rubro: "taxi" }, servicios: SERV_TAXI });
+  let r = await taxi(store, { texto: "hola necesito un taxi" });
+  assert.match(todoTexto(r), /Taxis Express/);
+  assert.match(todoTexto(r), /nombre/); // cliente nuevo
+  r = await taxi(store, { texto: "Andrés" });
+  assert.match(todoTexto(r), /Dónde te recogemos/);
+  r = await taxi(store, { texto: "Calle 10 # 20-30 barrio Centro" });
+  assert.match(todoTexto(r), /Para dónde vas/);
+  r = await taxi(store, { texto: "al aeropuerto" });
+  assert.match(todoTexto(r), /Confirma tu taxi/);
+  assert.match(todoTexto(r), /Calle 10 # 20-30/);
+  assert.match(todoTexto(r), /Ahora mismo/);
+  r = await taxi(store, { opcionId: "viaje:ok" });
+  assert.match(todoTexto(r), /buscando el taxi más cercano/);
+  const v = store.db.citas[0];
+  assert.equal(v.tipo, "viaje");
+  assert.equal(v.estado, "pendiente");
+  assert.equal(v.recogida, "Calle 10 # 20-30 barrio Centro");
+  assert.equal(v.servicioId, "t2"); // detectó "aeropuerto"
+  assert.equal(store.notificaciones[0].tipo, "viaje");
+});
+
+test("taxi: enviar la ubicación de WhatsApp pide el taxi de una", async () => {
+  const store = crearStoreMemoria({
+    config: { nombre: "Taxis Express", rubro: "taxi" },
+    servicios: SERV_TAXI,
+    clientes: [{ id: "p1", nombre: "Laura Díaz", telefono: "573005556677" }],
+  });
+  let r = await taxi(store, { ubicacion: { lat: 4.6097, lng: -74.0817, direccion: "Cra 7 # 32-16, Bogotá" } });
+  assert.match(todoTexto(r), /Para dónde vas/);
+  r = await taxi(store, { opcionId: "viaje:sindestino" });
+  assert.match(todoTexto(r), /Cra 7 # 32-16/);
+  r = await taxi(store, { texto: "si" });
+  assert.equal(store.db.citas.length, 1);
+  assert.equal(store.db.citas[0].ubicacion.lat, 4.6097);
+  // Cancelar escribiendo "cancelar"
+  r = await taxi(store, { texto: "cancelar" });
+  assert.match(todoTexto(r), /cancelado/);
+  assert.equal(store.db.citas[0].estado, "cancelada");
+});
+
+test("taxi: programar para mañana a las 5 am", async () => {
+  const store = crearStoreMemoria({ config: { nombre: "Taxis Express", rubro: "taxi" }, servicios: SERV_TAXI, clientes: [{ id: "p1", nombre: "Laura Díaz", telefono: "573005556677" }] });
+  let r = await taxi(store, { texto: "quiero programar un taxi para mañana a las 5 am" });
+  assert.match(todoTexto(r), /Dónde te recogemos/);
+  await taxi(store, { texto: "Hotel Central, Calle 5 # 4-10" });
+  r = await taxi(store, { opcionId: "viaje:sindestino" });
+  assert.match(todoTexto(r), /martes 6 de octubre a las 5:00 am/);
+  r = await taxi(store, { opcionId: "viaje:ok" });
+  assert.match(todoTexto(r), /programado/);
+  assert.equal(store.db.citas[0].fecha, "2026-10-06");
+  assert.equal(store.db.citas[0].hora, "05:00");
+  assert.equal(store.db.citas[0].programado, true);
+});
+
+test("taxi: no deja cancelar por chat si el conductor ya va en camino", async () => {
+  const store = crearStoreMemoria({
+    config: { nombre: "Taxis Express", rubro: "taxi" },
+    servicios: SERV_TAXI,
+    clientes: [{ id: "p1", nombre: "Laura Díaz", telefono: "573005556677" }],
+    citas: [{ id: "v1", tipo: "viaje", clienteId: "p1", fecha: AHORA.fecha, hora: "09:00", estado: "confirmada", profesionalId: "c1" }],
+  });
+  const r = await taxi(store, { texto: "cancelar el taxi" });
+  assert.match(todoTexto(r), /ya va en camino/);
+  assert.equal(store.db.citas[0].estado, "confirmada");
+});

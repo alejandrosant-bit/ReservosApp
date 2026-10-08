@@ -20,7 +20,8 @@ const DIAS_TEXTO = { domingo: 0, lunes: 1, martes: 2, miercoles: 3, jueves: 4, v
 
 const RE_CANCELAR = /\b(cancel\w*|anul\w*|no (voy|puedo|podre) (a )?(ir|asistir|llegar)|no podre ir|eliminar (la|mi) cita|borrar (la|mi) cita|desagendar)\b/;
 const RE_REAGENDAR = /\b(reagend\w*|cambiar (la|mi) (cita|hora)|mover (la|mi) cita|reprogram\w*)\b/;
-const RE_AGENDAR = /\b(cita|agend\w*|reserv\w*|turno|apart\w*|cupo|disponib\w*|separar|quiero (un|una)|necesito (un|una)|tienes (algo|espacio|cupo)|hay (espacio|cupo))\b/;
+const RE_AGENDAR = /\b(cita|agend\w*|reserv\w*|turno|apart\w*|cupo|disponib\w*|separar|consulta|sesion|clase|valoracion|programar|quiero (un|una)|necesito (un|una)|tienes (algo|espacio|cupo)|hay (espacio|cupo))\b/;
+const RE_TAXI = /\b(taxi|taxis|carro|movil|carrera|recoj\w*|recog\w*|me lleven|llevarme|transporte|un servicio)\b/;
 // Ojo: "mi cita" a secas no cuenta ("quiero agendar mi cita mañana" es agendar)
 const RE_MIS_CITAS = /\b(mis citas|tengo cita|cuando es mi cita|ver citas|ver mi cita|a que hora es mi cita|mis turnos|tengo turno|cuando es mi turno|a que hora es mi turno)\b/;
 const RE_SALUDO = /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|hey|ola|saludos|que tal|alo)\b/;
@@ -34,6 +35,7 @@ export function detectarIntencion(textoNorm) {
   if (RE_CANCELAR.test(t)) return "cancelar";
   if (RE_REAGENDAR.test(t)) return "reagendar";
   if (RE_MIS_CITAS.test(t)) return "miscitas";
+  if (RE_TAXI.test(t)) return "taxi";
   if (RE_AGENDAR.test(t)) return "agendar";
   if (RE_MENU.test(t)) return "menu";
   if (RE_SALUDO.test(t)) return "saludo";

@@ -48,6 +48,11 @@ export function crearStoreMemoria({ config = {}, servicios = [], profesionales =
       db.citas.push({ id, ...data });
       return id;
     },
+    async crearViaje(data) {
+      const id = "viaje" + ++n;
+      db.citas.push({ id, ...data });
+      return id;
+    },
     async citasFuturasDeClientes(ids, desde) {
       return db.citas.filter((c) => ids.includes(c.clienteId) && c.fecha >= desde);
     },

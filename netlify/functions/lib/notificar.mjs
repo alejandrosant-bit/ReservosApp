@@ -9,11 +9,21 @@ export async function notificarDueno(negocioId, { tipo, cita }, config = {}) {
   const hoy = ahoraEnZona(config.zonaHoraria).fecha;
   const cuando = cita.fecha === hoy ? "hoy" : cita.fecha === sumarDias(hoy, 1) ? "mañana" : fechaCorta(cita.fecha);
 
-  const titulo = tipo === "cancelada" ? `❌ Cita cancelada ${hora12(cita.hora)}` : `🔔 Nuevo cliente para ${hora12(cita.hora)}`;
-  const cuerpo =
+  const esViaje = cita.tipo === "viaje";
+  let titulo = tipo === "cancelada" ? `❌ Cita cancelada ${hora12(cita.hora)}` : `🔔 Nuevo cliente para ${hora12(cita.hora)}`;
+  let cuerpo =
     tipo === "cancelada"
       ? `${cita.clienteNombre || "Cliente"} canceló ${cita.servicioNombre} (${cuando})`
       : `${cita.servicioNombre} · ${cita.clienteNombre || ""} · ${cuando}`;
+  if (esViaje) {
+    titulo =
+      tipo === "cancelada"
+        ? "❌ Taxi cancelado por el pasajero"
+        : cita.programado
+          ? `📅 Taxi programado ${cuando} ${hora12(cita.hora)}`
+          : "🚕 ¡Nueva solicitud de taxi!";
+    cuerpo = `${cita.recogida || ""} · ${cita.clienteNombre || ""}${cita.destino ? " → " + cita.destino : ""}`;
+  }
 
   // Historial de avisos (la campanita dentro de la app)
   await db.collection(`negocios/${negocioId}/avisos`).add({

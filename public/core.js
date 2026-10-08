@@ -319,81 +319,32 @@ export function puedeCancelar(cita, config, ahora) {
 }
 
 // ------------------------------------------------------------
-// Plantillas de mensajes del bot (el dueño las puede cambiar)
+// Mensajes del bot y tipos de negocio: ver rubros.js
 // Variables: {negocio} {asistente} {cliente} {servicio} {fecha}
 // {hora} {horas_cancelacion} {direccion} {profesional}
 // ------------------------------------------------------------
-export const MENSAJES_POR_DEFECTO = {
-  bienvenida: "¡Hola{cliente_coma}! 👋 Bienvenid@ a *{negocio}*. Soy {asistente}, tu asistente virtual. ¿En qué te puedo ayudar?",
-  pedirNombre: "Para atenderte mejor, ¿me dices tu *nombre y apellido*?",
-  pedirCedula: "Gracias, {cliente}. ¿Me regalas tu número de *cédula*? (solo números)",
-  elegirServicio: "¿Qué servicio deseas? Elige una opción 👇",
-  elegirDia: "¿Qué día te queda mejor para tu *{servicio}*?",
-  elegirHora: "Estas son las horas disponibles el *{fecha}* 👇",
-  horaDisponible: "¡Buenas noticias! El *{fecha}* a las *{hora}* hay cupo para *{servicio}*. ¿La confirmo?",
-  horaOcupada: "Lo siento, el *{fecha}* a las *{hora}* ya no hay cupo 😕. Estas son las horas más cercanas disponibles:",
-  diaCerrado: "Ese día no tenemos atención 🙏. Estos son los próximos días con cupo:",
-  confirmada:
-    "✅ ¡Listo, {cliente}! Tu cita quedó agendada:\n\n💆 *{servicio}*\n📅 {fecha}\n🕒 {hora}{profesional_linea}\n📍 {direccion}\n\nPor favor *no faltes* a tu cita. Si no puedes asistir, escríbenos para cancelar *al menos {horas_cancelacion} horas antes*, por ejemplo: _\"quiero cancelar mi cita\"_.\n\n¡Te esperamos! 💖",
-  pedirNombreCancelar: "Claro, te ayudo a cancelar. ¿A nombre de quién está la cita? (nombre y apellido)",
-  elegirCitaCancelar: "Encontré estas citas a nombre de *{cliente}*. ¿Cuál deseas cancelar?",
-  confirmarCancelar: "¿Seguro que deseas cancelar tu cita de *{servicio}* del *{fecha}* a las *{hora}*?",
-  cancelada: "Tu cita de *{servicio}* del {fecha} a las {hora} fue *cancelada* ✅. Gracias por avisarnos con tiempo. Cuando quieras agendar de nuevo, escríbenos. 😊",
-  sinCitas: "No encontré citas próximas a nombre de *{cliente}* 🤔. Revisa que el nombre esté bien escrito o escríbelo como lo diste al agendar.",
-  muyTarde:
-    "Tu cita de *{servicio}* es hoy a las *{hora}* y ya faltan menos de {horas_cancelacion} horas, así que no se puede cancelar por aquí 🙏. Por favor comunícate directamente con el negocio.",
-  despedida: "¡Con gusto! Que tengas un lindo día 🌸",
-  noEntendi: "Disculpa, no te entendí bien 🙈. Por favor elige una de las opciones 👇",
-  recordatorio: "⏰ Hola {cliente}, te recordamos tu cita de *{servicio}* hoy {fecha} a las *{hora}* en {negocio}. ¡Te esperamos! Si no puedes asistir responde *cancelar*.",
-  fueraDeServicio: "En este momento el agendamiento por WhatsApp no está disponible. Por favor llámanos. 🙏",
-};
+import { MENSAJES_POR_DEFECTO, MENSAJES_BARBERIA, MENSAJES_TAXI, RUBROS, rubroDe, vocabularioDe } from "./rubros.js";
+export { MENSAJES_POR_DEFECTO, MENSAJES_BARBERIA, MENSAJES_TAXI, RUBROS, rubroDe, vocabularioDe };
+export { ORDEN_RUBROS, VOCES, frasesDe, mensajesGenerales } from "./rubros.js";
 
-// Mismo bot con tono de barbería: directo, relajado y masculino.
-export const MENSAJES_BARBERIA = {
-  bienvenida: "¡Qué más{cliente_coma}! 💈 Bienvenido a *{negocio}*. Soy {asistente}, el asistente de la barbería. ¿Qué necesitas?",
-  pedirNombre: "Listo, para apartarte el turno, ¿me das tu *nombre y apellido*?",
-  pedirCedula: "Gracias, {cliente}. Pásame tu número de *cédula* (solo números).",
-  elegirServicio: "¿Qué te vas a hacer? Escoge 👇",
-  elegirDia: "¿Qué día te sirve para tu *{servicio}*?",
-  elegirHora: "Estos son los turnos libres el *{fecha}* 👇",
-  horaDisponible: "¡Hay silla! El *{fecha}* a las *{hora}* está libre para *{servicio}*. ¿Te lo aparto?",
-  horaOcupada: "Ese turno del *{fecha}* a las *{hora}* ya está tomado. Estos son los más cercanos:",
-  diaCerrado: "Ese día la barbería está cerrada. Estos son los próximos días con turnos:",
-  confirmada:
-    "✅ ¡Listo, {cliente}! Tu turno quedó apartado:\n\n💈 *{servicio}*\n📅 {fecha}\n🕒 {hora}{profesional_linea}\n📍 {direccion}\n\nLlega puntual 👊. Si no puedes venir, avísanos *mínimo {horas_cancelacion} horas antes* escribiendo _\"cancelar mi turno\"_, así le damos la silla a otro.\n\n¡Nos vemos!",
-  pedirNombreCancelar: "Sin problema. ¿A nombre de quién está el turno? (nombre y apellido)",
-  elegirCitaCancelar: "Estos son los turnos de *{cliente}*. ¿Cuál cancelo?",
-  confirmarCancelar: "¿Cancelo tu turno de *{servicio}* del *{fecha}* a las *{hora}*?",
-  cancelada: "Listo, cancelé tu turno de *{servicio}* del {fecha} a las {hora} ✅. Gracias por avisar. Cuando quieras volver, escríbenos 💈",
-  sinCitas: "No encontré turnos próximos a nombre de *{cliente}*. Revisa que el nombre esté igual a como lo diste al agendar.",
-  muyTarde:
-    "Tu turno de *{servicio}* es hoy a las *{hora}* y faltan menos de {horas_cancelacion} horas, por aquí ya no se puede cancelar. Llama directo a la barbería, porfa.",
-  despedida: "¡De una! Que te vaya bien 👊",
-  noEntendi: "No te entendí bien. Escoge una de las opciones 👇",
-  recordatorio: "⏰ Qué más {cliente}, te recordamos tu turno de *{servicio}* hoy {fecha} a las *{hora}* en {negocio}. ¡Te esperamos! Si no puedes venir responde *cancelar*.",
-  fueraDeServicio: "Ahora mismo no estamos agendando por WhatsApp. Llámanos directo, porfa.",
-};
-
-// Estilos de la app: misma interfaz, distinto tono.
+// Estilos visuales: cambian colores, letras, íconos y celebraciones.
+// El tono del bot y las palabras ("cita", "paciente"...) los da el
+// tipo de negocio (rubro).
 export const ESTILOS = {
   belleza: {
-    nombre: "Spa y belleza",
+    nombre: "Spa y belleza (rosa)",
     color: "#c2185b",
-    asistente: "Sofi",
-    mensajes: MENSAJES_POR_DEFECTO,
     iconoServicio: "💆",
     lluviaPago: ["💸", "💰", "✨", "💖", "🪙"],
     lluviaCliente: ["💖", "🌸", "✨", "🎀", "💕"],
     iconoCliente: "🌸",
     tituloPago: "¡Pago recibido!",
-    tituloCliente: "¡Nuevo cliente!",
+    tituloCliente: null,
     bienvenida: (n) => (n ? `Bienvenid@, ${n}` : "Bienvenid@"),
   },
   barberia: {
-    nombre: "Barbería",
+    nombre: "Barbería (carbón y dorado)",
     color: "#a16207",
-    asistente: "Max",
-    mensajes: MENSAJES_BARBERIA,
     iconoServicio: "💈",
     lluviaPago: ["💵", "💰", "🪙", "🔥", "💸"],
     lluviaCliente: ["💈", "✂️", "🪒", "🔥", "👊"],
@@ -402,9 +353,42 @@ export const ESTILOS = {
     tituloCliente: "¡Cliente nuevo en la silla!",
     bienvenida: (n) => (n ? `Bienvenido, ${n}` : "Bienvenido"),
   },
+  salud: {
+    nombre: "Salud (verde calma)",
+    color: "#0f766e",
+    iconoServicio: "🩺",
+    lluviaPago: ["💵", "✨", "💚", "🪙", "💸"],
+    lluviaCliente: ["💚", "✨", "🌿", "🤍", "💙"],
+    iconoCliente: "🌿",
+    tituloPago: "¡Pago registrado!",
+    tituloCliente: null,
+    bienvenida: (n) => (n ? `Te damos la bienvenida, ${n}` : "Te damos la bienvenida"),
+  },
+  general: {
+    nombre: "Profesional (índigo)",
+    color: "#4f46e5",
+    iconoServicio: "📌",
+    lluviaPago: ["💵", "💰", "✨", "🪙", "💸"],
+    lluviaCliente: ["✨", "🎉", "💙", "⭐", "🙌"],
+    iconoCliente: "🙌",
+    tituloPago: "¡Pago recibido!",
+    tituloCliente: null,
+    bienvenida: (n) => (n ? `Bienvenido(a), ${n}` : "Bienvenido(a)"),
+  },
+  taxi: {
+    nombre: "Taxis (amarillo)",
+    color: "#1f2937",
+    iconoServicio: "🚕",
+    lluviaPago: ["💵", "🚕", "🪙", "💰", "✨"],
+    lluviaCliente: ["🚕", "📍", "✨", "🙌", "⭐"],
+    iconoCliente: "🚕",
+    tituloPago: "¡Carrera cobrada!",
+    tituloCliente: "¡Nuevo pasajero!",
+    bienvenida: (n) => (n ? `Bienvenido, ${n}` : "Bienvenido"),
+  },
 };
 
-export const estiloDe = (config) => ESTILOS[config?.estilo] || ESTILOS.belleza;
+export const estiloDe = (config) => ESTILOS[config?.estilo] || ESTILOS[rubroDe(config).estilo] || ESTILOS.belleza;
 
 export function rellenar(plantilla, vars) {
   return String(plantilla || "").replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? ""));
@@ -434,14 +418,24 @@ export const CONFIG_POR_DEFECTO = {
   pedirCedula: true,
   recordatorioHoras: 3,
   botActivo: true,
-  mensajes: MENSAJES_POR_DEFECTO,
 };
 
+const HORARIO_24H = Object.fromEntries([0, 1, 2, 3, 4, 5, 6].map((d) => [d, { abierto: true, desde: "00:00", hasta: "23:59" }]));
+
 export function conDefectos(config) {
+  const rubro = rubroDe(config);
   const est = estiloDe(config);
-  const c = { ...CONFIG_POR_DEFECTO, colorPrimario: est.color, asistente: est.asistente, ...(config || {}) };
-  c.mensajes = { ...est.mensajes, ...(config?.mensajes || {}) };
-  c.horario = { ...HORARIO_POR_DEFECTO, ...(config?.horario || {}) };
+  const c = {
+    ...CONFIG_POR_DEFECTO,
+    colorPrimario: est.color,
+    asistente: rubro.asistente,
+    ...(rubro.modo === "viajes" ? { horario: HORARIO_24H, pedirCedula: false, horasMinCancelacion: 0, intervalo: 15 } : {}),
+    ...(config || {}),
+  };
+  c.rubro = rubro.id;
+  c.estilo = config?.estilo || rubro.estilo;
+  c.mensajes = { ...rubro.mensajes, ...(config?.mensajes || {}) };
+  c.horario = { ...(rubro.modo === "viajes" ? HORARIO_24H : HORARIO_POR_DEFECTO), ...(config?.horario || {}) };
   return c;
 }
 
