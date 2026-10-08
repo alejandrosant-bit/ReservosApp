@@ -41,6 +41,7 @@ son idénticas.
 
 - Al crear el negocio, elegir **Barbería** activa ese estilo con servicios de barbería de ejemplo.
 - Se puede cambiar en **Ajustes → Mi negocio → Estilo de la app** (el bot adopta el tono nuevo).
+- En **Ajustes → Mi negocio → Color de fondo** cada negocio elige su fondo (10 sugeridos o cualquier color). Si es oscuro, las letras encima se aclaran solas para que siempre se lean.
 - Para vender **Reservo Barber como un sitio aparte**, haz otro sitio en Netlify desde este mismo
   repositorio y pon `estiloPorDefecto = "barberia"` en `public/firebase-config.js` de esa copia
   (o en una rama propia): la pantalla de entrada, el ícono y la instalación salen como barbería.

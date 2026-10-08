@@ -444,3 +444,32 @@ export function conDefectos(config) {
   c.horario = { ...HORARIO_POR_DEFECTO, ...(config?.horario || {}) };
   return c;
 }
+
+// ------------------------------------------------------------
+// Color de fondo personalizado: elige el color de letra que mejor
+// se lee sobre el fondo (contraste WCAG), para que un fondo oscuro
+// o muy saturado nunca deje los textos ilegibles.
+// ------------------------------------------------------------
+export function hexValido(hex) {
+  return /^#[0-9a-f]{6}$/i.test(String(hex || ""));
+}
+
+function luminancia(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function contraste(a, b) {
+  const [l1, l2] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+  return (l1 + 0.05) / (l2 + 0.05);
+}
+
+export function tintaParaFondo(fondo, { oscura = "#1d1b20", clara = "#fbf8fa" } = {}) {
+  if (!hexValido(fondo)) return null;
+  const usarClara = contraste(fondo, clara) > contraste(fondo, oscura);
+  let tinta = usarClara ? clara : oscura;
+  // Fondos de tono medio (grises, colores intensos): si la letra suave
+  // no alcanza el mínimo legible (4.5:1), se usa blanco o negro puro.
+  if (contraste(fondo, tinta) < 4.5) tinta = contraste(fondo, "#ffffff") > contraste(fondo, "#000000") ? "#ffffff" : "#000000";
+  return { tinta, oscuro: tinta !== oscura && tinta !== "#000000", contraste: contraste(fondo, tinta) };
+}

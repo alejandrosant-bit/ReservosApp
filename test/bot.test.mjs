@@ -260,3 +260,14 @@ test("'agendar mi cita' es agendar, no consultar", () => {
   assert.equal(analizar("quiero agendar mi cita para mañana", ctx).intencion, "agendar");
   assert.equal(analizar("a qué hora es mi turno?", ctx).intencion, "miscitas");
 });
+
+test("fondo personalizado: la letra siempre se lee", async () => {
+  const { tintaParaFondo, contraste } = await import("../public/core.js");
+  for (const fondo of ["#ffffff", "#fbf4f7", "#000000", "#1c1c1f", "#c2185b", "#ffd6e7", "#0f766e", "#ffeb3b", "#3f51b5", "#808080"]) {
+    const t = tintaParaFondo(fondo);
+    assert.ok(contraste(fondo, t.tinta) >= 4.5, `${fondo} → ${t.tinta} (${contraste(fondo, t.tinta).toFixed(2)})`);
+  }
+  assert.equal(tintaParaFondo("#000000").oscuro, true);
+  assert.equal(tintaParaFondo("#fbf4f7").oscuro, false);
+  assert.equal(tintaParaFondo("rojo"), null);
+});

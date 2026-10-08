@@ -650,3 +650,42 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 }
 [data-estilo="barberia"] .celebra-titulo { color: #fff; }
 [data-estilo="barberia"] .celebra-detalle, [data-estilo="barberia"] .celebracion-pago .celebra-detalle { color: var(--laton); }
+
+/* ============================================================
+   Fondo personalizado del negocio
+   --tinta-fondo / --suave-fondo = letra que va directo sobre el
+   fondo. Por defecto son las normales; si el negocio elige un
+   fondo oscuro, app.js las cambia a claras. Las tarjetas, menús y
+   ventanas conservan su propia letra.
+   ============================================================ */
+:root { --tinta-fondo: var(--texto); --suave-fondo: var(--suave); }
+main#contenido, .barra { color: var(--tinta-fondo); }
+main#contenido .suave { color: var(--suave-fondo); }
+main#contenido :is(.tarjeta, .kpi, .cita, .tira-dias button, .pestanas button, .horas-grid button, .menu-ajustes button, .btn-sec, .sugerencias, input, select, textarea) { color: var(--texto); }
+main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--suave); }
+.modal-hoja, .toast, .celebra-tarjeta { color: var(--texto); }
+.modal-hoja .suave { color: var(--suave); }
+[data-fondo="oscuro"] body { background: var(--fondo); }
+[data-fondo="oscuro"] .barra { background: color-mix(in srgb, var(--fondo) 88%, #000); box-shadow: 0 1px 0 rgba(255, 255, 255, .08); }
+[data-fondo="oscuro"] .barra .btn-icono { color: var(--tinta-fondo); }
+[data-fondo="oscuro"] .columna-prof > h4 .suave, [data-fondo="oscuro"] main#contenido details summary { color: var(--tinta-fondo); }
+[data-fondo="oscuro"] .btn-link { color: color-mix(in srgb, var(--pri) 55%, #fff); }
+[data-fondo="claro"] body { background: radial-gradient(900px 500px at 100% -10%, color-mix(in srgb, var(--pri) 8%, transparent), transparent 70%), var(--fondo); }
+[data-estilo="barberia"][data-fondo] .barra { background: var(--carbon); color: #f5f1e8; }
+
+/* Selector de fondo en Ajustes */
+.fondo-campo { border: 1px solid var(--borde); border-radius: 14px; padding: 10px 12px 12px; margin: 0; }
+.fondo-campo legend { font-size: 13px; font-weight: 700; color: #4a4650; padding: 0 4px; }
+.fondos { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+.fondo-op {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 2px;
+  border: 2px solid transparent; border-radius: 12px; background: none; font: inherit; font-size: 11px; font-weight: 700; color: var(--texto); cursor: pointer;
+  transition: transform .2s var(--rebote), border-color .2s;
+}
+.fondo-op:hover { transform: translateY(-2px); }
+.fondo-op.sel { border-color: var(--pri); background: var(--pri-suave); }
+.fondo-muestra { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .12); box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .5); }
+.fondo-estilo { background: linear-gradient(135deg, #fbf4f7 50%, #ecebe8 50%); }
+.fondo-libre input[type="color"] { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .12); cursor: pointer; }
+.fondo-libre input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.fondo-libre input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }

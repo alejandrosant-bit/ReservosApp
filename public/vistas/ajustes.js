@@ -4,7 +4,7 @@
 // ============================================================
 import { E, alCambiar, guardarConfig, guardar, borrar, nuevoId, sesion, db, doc, setDoc, deleteDoc, escribir, listarColeccion, lote } from "../datos.js";
 import { ESTILOS, estiloDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
-import { esc, abrirModal, confirmar, toast, datosForm, campoMonto, leerMonto, montoATexto, sonar, descargar } from "../ui.js";
+import { esc, abrirModal, confirmar, toast, datosForm, campoMonto, leerMonto, montoATexto, sonar, descargar, aplicarFondo } from "../ui.js";
 import { prepararPush, probarNotificacion, pushDisponible } from "../notificaciones.js";
 import { colorProf } from "./agenda.js";
 
@@ -74,6 +74,20 @@ function abrirSeccion(s) {
 // ------------------------------------------------------------
 // Negocio
 // ------------------------------------------------------------
+// Fondos sugeridos: claros y suaves para el día a día, y oscuros
+// para quien quiera un look más elegante o de barbería.
+const FONDOS = [
+  ["#fbf4f7", "Rosa"],
+  ["#f7f1ff", "Lila"],
+  ["#eef8f3", "Menta"],
+  ["#eef5fb", "Cielo"],
+  ["#fbf6ec", "Crema"],
+  ["#f2f2f2", "Gris"],
+  ["#ecebe8", "Hueso"],
+  ["#2b2430", "Ciruela"],
+  ["#1c1c1f", "Carbón"],
+  ["#0f172a", "Noche"],
+];
 const ZONAS = [
   ["America/Bogota", "Colombia / Perú / Panamá / Ecuador (UTC−5)"],
   ["America/Caracas", "Venezuela (UTC−4)"],
@@ -125,12 +139,48 @@ function seccionNegocio() {
         <label>Color principal<input type="color" name="colorPrimario" value="${esc(c.colorPrimario)}" /></label>
         <label>Zona horaria<select name="zonaHoraria">${ZONAS.map(([z, n]) => `<option value="${z}" ${z === c.zonaHoraria ? "selected" : ""}>${n}</option>`).join("")}</select></label>
       </div>
-      <div class="fila-wrap">${["#c2185b", "#7c3aed", "#0f766e", "#1d4ed8", "#b45309", "#111827", "#be123c", "#15803d"].map((col) => `<button type="button" class="color-muestra" style="background:${col};border:0;cursor:pointer" data-col="${col}"></button>`).join("")}</div>
+      <div class="fila-wrap">${["#c2185b", "#7c3aed", "#0f766e", "#1d4ed8", "#b45309", "#111827", "#be123c", "#15803d"].map((col) => `<button type="button" class="color-muestra" style="background:${col};border:0;cursor:pointer" data-col="${col}" aria-label="Color ${col}"></button>`).join("")}</div>
+      <fieldset class="fondo-campo">
+        <legend>Color de fondo</legend>
+        <div class="fondos">
+          <button type="button" class="fondo-op" data-fondo="" title="El del estilo"><span class="fondo-muestra fondo-estilo"></span>Estilo</button>
+          ${FONDOS.map(([col, n]) => `<button type="button" class="fondo-op" data-fondo="${col}" title="${n}"><span class="fondo-muestra" style="background:${col}"></span>${n}</button>`).join("")}
+          <label class="fondo-op fondo-libre" title="Elegir otro color"><input type="color" id="fondo-libre" value="${esc(c.colorFondo || "#ffffff")}" /><span>Otro</span></label>
+        </div>
+        <p class="ayuda" id="fondo-nota">Se ve al instante. Si el fondo es oscuro, las letras que van encima se ponen claras solas para que se lean.</p>
+      </fieldset>
       <button class="btn btn-pri btn-bloque">Guardar</button>
     </form>`,
     onAbrir(cu, cerrar) {
       let logo = c.logo || "";
+      let fondo = c.colorFondo || "";
+      let guardado = false;
       const f = cu.querySelector("#f");
+      const marcarFondo = () => {
+        cu.querySelectorAll("[data-fondo]").forEach((b) => b.classList.toggle("sel", b.dataset.fondo === fondo));
+        cu.querySelector(".fondo-libre").classList.toggle("sel", !!fondo && !FONDOS.some(([col]) => col === fondo));
+        aplicarFondo(fondo); // vista previa
+      };
+      cu.querySelectorAll("[data-fondo]").forEach(
+        (b) =>
+          (b.onclick = () => {
+            fondo = b.dataset.fondo;
+            marcarFondo();
+          })
+      );
+      cu.querySelector("#fondo-libre").addEventListener("input", (e) => {
+        fondo = e.target.value;
+        marcarFondo();
+      });
+      marcarFondo();
+      // Si cierra sin guardar, vuelve el fondo que tenía
+      const observador = new MutationObserver(() => {
+        if (!cu.isConnected) {
+          observador.disconnect();
+          if (!guardado) aplicarFondo(E.config.colorFondo);
+        }
+      });
+      observador.observe(document.body, { childList: true });
       cu.querySelectorAll("[data-col]").forEach((b) => (b.onclick = () => (f.colorPrimario.value = b.dataset.col)));
       cu.querySelector("#logo").onchange = async (e) => {
         const a = e.target.files[0];
@@ -145,7 +195,8 @@ function seccionNegocio() {
       f.onsubmit = (ev) => {
         ev.preventDefault();
         const d = datosForm(f);
-        const cambios = { ...d, codigoPais: d.codigoPais.replace(/\D/g, ""), logo };
+        const cambios = { ...d, codigoPais: d.codigoPais.replace(/\D/g, ""), logo, colorFondo: fondo };
+        guardado = true;
         const anterior = c.estilo || "belleza";
         if (d.estilo !== anterior) {
           // Nuevo estilo: el bot adopta el tono nuevo y, si el color era

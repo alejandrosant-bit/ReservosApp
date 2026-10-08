@@ -3,7 +3,7 @@
 // ============================================================
 import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, actualizar } from "./datos.js";
 import * as cfgFirebase from "./firebase-config.js";
-import { $, $$, esc, toast, sonar, abrirModal, celebrar } from "./ui.js";
+import { $, $$, esc, toast, sonar, abrirModal, celebrar, aplicarFondo } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
 import { hora12, formatoMoneda, estiloDe } from "./core.js";
 
@@ -215,12 +215,13 @@ function aplicarMarca() {
   const c = E.config;
   aplicarEstilo(c.estilo || ESTILO_DESPLIEGUE);
   document.documentElement.style.setProperty("--pri", c.colorPrimario || "#c2185b");
+  aplicarFondo(c.colorFondo);
   $('meta[name="theme-color"]').setAttribute("content", c.colorPrimario || "#c2185b");
   $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Reservo"));
   $$("[data-logo]").forEach((el) => (el.src = c.logo || (document.documentElement.dataset.estilo === "barberia" ? "./icon-barber-192.png" : "./icon-192.png")));
   document.title = c.nombre || (c.estilo === "barberia" ? "Reservo Barber" : "Reservo");
   try {
-    localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, logo: c.logo, estilo: c.estilo }));
+    localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, fondo: c.colorFondo || "", logo: c.logo, estilo: c.estilo }));
   } catch {}
 }
 
@@ -229,6 +230,7 @@ function marcaGuardada() {
     const m = JSON.parse(localStorage.getItem("marca") || "null");
     if (!m) return;
     if (m.estilo) aplicarEstilo(m.estilo);
+    if (m.fondo) aplicarFondo(m.fondo);
     if (m.color) document.documentElement.style.setProperty("--pri", m.color);
     if (m.nombre) {
       $("#login-titulo").textContent = m.nombre;

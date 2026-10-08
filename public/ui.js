@@ -1,3 +1,5 @@
+import { tintaParaFondo } from "./core.js";
+
 // Utilidades de interfaz: escapar HTML, modales, avisos, sonido.
 
 export function esc(t) {
@@ -262,4 +264,23 @@ export function celebrar({ tipo = "pago", titulo, detalle = "", icono = "🎉", 
   } catch (e) {
     console.warn("celebrar:", e);
   }
+}
+
+// ------------------------------------------------------------
+// Color de fondo del negocio. Vacío = el del estilo (spa/barbería).
+// Ajusta el color de los textos que van directo sobre el fondo para
+// que siempre se lean; las tarjetas mantienen sus propios colores.
+// ------------------------------------------------------------
+export function aplicarFondo(color) {
+  const raiz = document.documentElement;
+  const t = tintaParaFondo(color);
+  if (!t) {
+    ["--fondo", "--tinta-fondo", "--suave-fondo"].forEach((v) => raiz.style.removeProperty(v));
+    delete raiz.dataset.fondo;
+    return;
+  }
+  raiz.style.setProperty("--fondo", color);
+  raiz.style.setProperty("--tinta-fondo", t.tinta);
+  raiz.style.setProperty("--suave-fondo", `color-mix(in srgb, ${t.tinta} 72%, ${color})`);
+  raiz.dataset.fondo = t.oscuro ? "oscuro" : "claro";
 }
