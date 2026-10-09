@@ -1200,3 +1200,44 @@ main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--su
 .login-wa-ico { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; background: #25d366; color: #fff; box-shadow: 0 0 0 0 rgba(37, 211, 102, .5); animation: tc-wa 2.4s ease-out infinite; }
 .login-wa-ico svg { width: 22px; height: 22px; }
 @keyframes tc-wa { 70%, 100% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } }
+
+/* ============================================================
+   Panel Reservo (administrador) y franja "Modo administrador"
+   ============================================================ */
+#vista-admin { min-height: 100vh; }
+.contenedor-panel { width: 100%; max-width: 1100px; margin-inline: auto; padding-inline: 16px; }
+.panel-cab { position: sticky; top: 0; z-index: 20; background: rgba(11, 9, 8, .78); backdrop-filter: blur(14px); border-bottom: 1px solid var(--borde); }
+.panel-cab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--pri), var(--cian, #5ee7d4), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: tc-barrido 5s linear infinite; }
+.panel-cab-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: calc(env(safe-area-inset-top) + 10px) 10px; }
+.panel-logo .reservo-iso { font-size: 34px; filter: drop-shadow(0 6px 16px rgba(227, 166, 110, .5)); }
+.panel-logo .reservo-palabra { font-size: 24px; color: var(--texto); }
+.panel-sello { font: 600 11px var(--fuente-mono); letter-spacing: .08em; text-transform: uppercase; color: #1a110b; background: linear-gradient(135deg, #f2c79c, #d9965c); padding: 3px 8px; border-radius: 6px; }
+.panel-correo { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) { .panel-correo { display: none; } }
+.panel-cuerpo { padding-top: 22px; padding-bottom: 60px; }
+.panel-cuerpo .kpis { margin-bottom: 14px; }
+.panel-herramientas { margin-bottom: 12px; }
+.panel-herramientas input { flex: 1; }
+.panel-lista { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+@media (max-width: 400px) { .panel-lista { grid-template-columns: 1fr; } }
+.panel-negocio { display: grid; gap: 12px; align-content: start; }
+.panel-negocio.pausado { opacity: .7; }
+.panel-negocio-cab .avatar { font-size: 20px; }
+.panel-datos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.panel-datos div { padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .03); border: 1px solid var(--borde); }
+.panel-datos b { display: block; font-size: 15px; }
+.panel-datos span { font-size: 11.5px; color: var(--suave); }
+.panel-acciones .btn { flex: 1 1 auto; }
+.panel-credenciales { display: grid; gap: 4px; font-family: var(--fuente-mono); margin: 10px 0; }
+
+.modo-admin {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 150; height: calc(40px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 12px 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px;
+  background: linear-gradient(90deg, #2a1d14, #14201e); color: #f6ece2; border-bottom: 1px solid rgba(227, 166, 110, .45);
+}
+.modo-admin-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modo-admin .btn { min-height: 28px; padding: 4px 10px; font-size: 12.5px; background: linear-gradient(135deg, #f2c79c, #d9965c); color: #1a110b; border: 0; flex: none; }
+#vista-app.con-admin { padding-top: calc(40px + env(safe-area-inset-top)); }
+#vista-app.con-admin .barra { top: calc(40px + env(safe-area-inset-top)); padding-top: 10px; }
+@media (min-width: 900px) { #vista-app.con-admin .menu-lateral { top: 40px; height: calc(100vh - 40px); } }
+body:has(#vista-app.con-admin:not(.oculto)) #toasts { top: calc(env(safe-area-inset-top) + 50px); }

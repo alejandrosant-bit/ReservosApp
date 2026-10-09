@@ -3,7 +3,7 @@
 // ============================================================
 import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, actualizar } from "./datos.js";
 import * as cfgFirebase from "./firebase-config.js";
-import { $, $$, esc, toast, sonar, abrirModal, celebrar, aplicarFondo } from "./ui.js";
+import { $, $$, esc, toast, sonar, abrirModal, celebrar, aplicarFondo, cerrarModalSuperior } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
 import { hora12, formatoMoneda, estiloDe, vocabularioDe, tintaParaFondo } from "./core.js";
 import { iniciarRed } from "./red.js";
@@ -17,7 +17,7 @@ const VISTAS = {
 };
 
 function mostrar(id) {
-  ["vista-cargando", "vista-sin-config", "vista-login", "vista-app"].forEach((v) => $("#" + v).classList.toggle("oculto", v !== id));
+  ["vista-cargando", "vista-sin-config", "vista-login", "vista-admin", "vista-app"].forEach((v) => $("#" + v).classList.toggle("oculto", v !== id));
 }
 
 // ------------------------------------------------------------
@@ -118,6 +118,7 @@ function traducirError(e) {
   if (c.includes("network")) return "Sin internet. La primera vez necesitas conexión para entrar.";
   if (c.includes("too-many-requests")) return "Demasiados intentos. Espera unos minutos.";
   if (c.includes("invalid-email")) return "El correo no es válido.";
+  if (c.includes("user-disabled")) return "Tu cuenta está pausada. Escríbenos por WhatsApp para reactivarla.";
   return e.message || "Ocurrió un error.";
 }
 
@@ -275,6 +276,7 @@ function aplicarMarca() {
   const nAgenda = $('#nav a[data-tab="agenda"] span:last-child');
   if (nAgenda) nAgenda.textContent = V.viajes ? "Central" : "Agenda";
   document.title = c.nombre || (c.estilo === "barberia" ? "Reservo Barber" : "Reservo");
+  if (E.adminViendo) return; // revisando otro negocio: no cambia la entrada de este equipo
   try {
     localStorage.setItem("marca", JSON.stringify({ nombre: c.nombre, color: c.colorPrimario, fondo: c.colorFondo || "", logo: c.logo, estilo: c.estilo }));
   } catch {}
@@ -387,36 +389,84 @@ if (!configurado) {
   sesion.observar((user) => {
     if (user) {
       E.usuario = user;
-      iniciarDatos(user.uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimiento });
-      mostrar("vista-app");
-      aplicarMarca();
-      pintarSync();
-      nombreVista = null;
-      navegar();
-      prepararPush({ silencioso: true });
-      revisarPrimeraVez();
+      if (esAdmin(user)) abrirPanel();
+      else abrirNegocio(user.uid);
     } else {
-      detenerDatos();
-      E.uid = null;
-      vistaActual?.desmontar?.();
-      vistaActual = null;
-      nombreVista = null;
+      cerrarNegocio();
+      E.adminViendo = null;
+      $("#vista-admin").innerHTML = "";
       mostrar("vista-login");
       iniciarRed($(".login-red"));
     }
   });
 }
 
-// Primera vez: el negocio aún no tiene configuración → asistente
-let asistenteMostrado = false;
-const quitarOyente = alCambiar(async (que) => {
-  if (que !== "config" || asistenteMostrado) return;
+function abrirNegocio(uid) {
+  iniciarDatos(uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimiento });
+  mostrar("vista-app");
+  aplicarMarca();
+  pintarSync();
+  nombreVista = null;
+  navegar();
+  // Las notificaciones del negocio van al teléfono del dueño, no al
+  // del administrador que lo está revisando.
+  if (!E.adminViendo) prepararPush({ silencioso: true });
   revisarPrimeraVez();
+}
+
+function cerrarNegocio() {
+  detenerDatos();
+  E.uid = null;
+  vistaActual?.desmontar?.();
+  vistaActual = null;
+  nombreVista = null;
+  $("#contenido").innerHTML = "";
+}
+
+// ------------------------------------------------------------
+// Panel Reservo (correo del equipo): alta de negocios, entrar a
+// revisarlos/configurarlos y manejar la membresía.
+// ------------------------------------------------------------
+const esAdmin = (user) => Boolean(cfgFirebase.correoAdmin) && String(user?.email || "").toLowerCase() === cfgFirebase.correoAdmin.toLowerCase();
+
+async function abrirPanel() {
+  // Cierra ventanas que hayan quedado abiertas en el negocio revisado
+  for (let i = 0; i < 20 && document.querySelector(".modal"); i++) cerrarModalSuperior();
+  cerrarNegocio();
+  E.adminViendo = null;
+  $("#modo-admin").classList.add("oculto");
+  $("#vista-app").classList.remove("con-admin");
+  aplicarEstilo("tecno");
+  document.documentElement.style.setProperty("--pri", "#e3a66e");
+  document.documentElement.style.setProperty("--pri-tinta", "#1a110b");
+  aplicarFondo("");
+  $('meta[name="theme-color"]').setAttribute("content", "#0b0908");
+  document.title = "Panel · Reservo";
+  mostrar("vista-admin");
+  const panel = await import("./vistas/admin.js");
+  if (!$("#vista-admin").childElementCount) panel.montarPanel($("#vista-admin"), { usuario: E.usuario, entrar: entrarANegocio });
+  else panel.cargar();
+}
+
+function entrarANegocio(n) {
+  E.adminViendo = n;
+  $("#modo-admin-nombre").textContent = n.nombre || n.correo;
+  $("#modo-admin").classList.remove("oculto");
+  $("#vista-app").classList.add("con-admin");
+  location.hash = "agenda";
+  abrirNegocio(n.uid);
+}
+$("#modo-admin-volver").onclick = () => abrirPanel();
+
+// Primera vez: el negocio aún no tiene configuración → asistente
+// (una vez por negocio: el administrador puede configurar varios)
+let asistenteMostradoPara = null;
+alCambiar((que) => {
+  if (que === "config") revisarPrimeraVez();
 });
 async function revisarPrimeraVez() {
-  if (asistenteMostrado || E.configExiste !== false || !navigator.onLine) return;
-  asistenteMostrado = true;
-  quitarOyente();
+  if (!E.uid || asistenteMostradoPara === E.uid || E.configExiste !== false || !navigator.onLine) return;
+  asistenteMostradoPara = E.uid;
   const { asistenteInicial } = await import("./vistas/ajustes.js");
   asistenteInicial();
 }

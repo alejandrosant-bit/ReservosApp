@@ -72,6 +72,14 @@ export function sumarDias(fechaISO, dias) {
   return `${f.getUTCFullYear()}-${pad2(f.getUTCMonth() + 1)}-${pad2(f.getUTCDate())}`;
 }
 
+// Suma meses a una fecha "YYYY-MM-DD" (31 ene + 1 mes = 28/29 feb)
+export function sumarMeses(fechaISO, n = 1) {
+  const [a, m, d] = fechaISO.split("-").map(Number);
+  const destino = new Date(Date.UTC(a, m - 1 + n, 1));
+  const ultimo = new Date(Date.UTC(destino.getUTCFullYear(), destino.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${destino.getUTCFullYear()}-${pad2(destino.getUTCMonth() + 1)}-${pad2(Math.min(d, ultimo))}`;
+}
+
 export function diaSemana(fechaISO) {
   const [y, m, d] = fechaISO.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();

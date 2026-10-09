@@ -7,6 +7,7 @@
 // ============================================================
 import { getAuth } from "firebase-admin/auth";
 import { firebase } from "./lib/firebase.mjs";
+import { negocioDe } from "./lib/admin.mjs";
 import { enviarWhatsapp, tokenDe } from "./lib/whatsapp-api.mjs";
 import { conDefectos, rellenar } from "../../public/core.js";
 
@@ -20,9 +21,9 @@ export default async (req) => {
 
   // 1) ¿Quién llama? Debe traer el token de su sesión
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  let uid;
+  let quien;
   try {
-    uid = (await getAuth().verifyIdToken(token)).uid;
+    quien = await getAuth().verifyIdToken(token);
   } catch {
     return json({ error: "Sesión no válida. Vuelve a entrar a la app." }, 401);
   }
@@ -34,6 +35,8 @@ export default async (req) => {
     return json({ error: "Datos inválidos" }, 400);
   }
   const { citaId, evento } = datos || {};
+  // El administrador de Reservo puede actuar sobre el negocio que revisa
+  const uid = negocioDe(quien, datos?.negocioId);
   if (!citaId || !["asignado", "llego", "sinTaxis"].includes(evento)) return json({ error: "Faltan datos" }, 400);
 
   // 2) Solo puede avisar sobre servicios de SU negocio

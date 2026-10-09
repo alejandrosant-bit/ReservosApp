@@ -7,7 +7,7 @@
 //    3:00 pm") aunque la app esté cerrada.
 // Al cambiar cualquier archivo, sube el número de VERSION.
 // ============================================================
-const VERSION = "reservo-v14";
+const VERSION = "reservo-v15";
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 const ARCHIVOS = [
   "./",
@@ -40,6 +40,7 @@ const ARCHIVOS = [
   "./rubros.js",
   "./vistas/viajes.js",
   "./red.js",
+  "./vistas/admin.js",
   `${SDK}/firebase-app.js`,
   `${SDK}/firebase-auth.js`,
   `${SDK}/firebase-firestore.js`,

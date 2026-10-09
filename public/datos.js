@@ -67,6 +67,7 @@ export const E = {
   movimientos: [],
   cajas: [],
   avisos: [],
+  adminViendo: null, // negocio que el administrador está revisando
   desdeCargado: null, // fecha desde la que hay citas/movimientos en memoria
   cargado: {},
 };
@@ -230,6 +231,12 @@ function escuchar(q, nombre, transformar = (x) => x, alAgregar = null) {
 
 export function iniciarDatos(uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimiento } = {}) {
   detenerDatos();
+  // Si cambia de negocio (panel del administrador), no se mezclan datos
+  if (E.uid !== uid) {
+    E.config = conDefectos({});
+    E.configExiste = null;
+    for (const k of ["servicios", "profesionales", "clientes", "citas", "movimientos", "cajas", "avisos"]) E[k] = [];
+  }
   E.uid = uid;
   E.cargado = {};
   const h = ahoraEnZona(E.config.zonaHoraria).fecha;
@@ -317,12 +324,35 @@ export async function avisarCliente(citaId, evento) {
   const r = await fetch("/api/avisar-cliente", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token || ""}` },
-    body: JSON.stringify({ citaId, evento }),
+    body: JSON.stringify({ citaId, evento, negocioId: E.uid }),
   });
   let cuerpo = {};
   try {
     cuerpo = await r.json();
   } catch {}
   if (!r.ok) throw new Error(cuerpo.error || "No se pudo avisar al cliente");
+  return cuerpo;
+}
+
+// Panel Reservo (solo administradores): alta de negocios, actividad
+// y membresía. Lo atiende la función /api/admin.
+export async function llamarAdmin(accion, datos = {}) {
+  if (!navigator.onLine) throw new Error("Sin internet: el panel necesita conexión.");
+  const token = await auth?.currentUser?.getIdToken?.();
+  let r;
+  try {
+    r = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token || ""}` },
+      body: JSON.stringify({ accion, ...datos }),
+    });
+  } catch {
+    throw new Error("No se pudo conectar con el servidor.");
+  }
+  let cuerpo = {};
+  try {
+    cuerpo = await r.json();
+  } catch {}
+  if (!r.ok) throw new Error(cuerpo.error || "El servidor no respondió. ¿Ya se desplegó en Netlify?");
   return cuerpo;
 }

@@ -24,6 +24,11 @@ export const vapidKey = "";
 // (membresía: quien no tiene cuenta ve un enlace a tu WhatsApp).
 export const permitirRegistro = false;
 
+// Correo del equipo de Reservo: al entrar con él se abre el Panel
+// (dar de alta negocios, entrar a revisarlos y manejar membresías).
+// Debe coincidir con esAdmin() de firestore.rules.
+export const correoAdmin = "alejandrosant2001@gmail.com";
+
 // Estilo de la pantalla de entrada para este despliegue:
 // "tecno" (oscuro, el de la página de Reservo), "belleza" o "barberia".
 // Cada negocio igual puede cambiarlo después en Ajustes → Mi negocio.

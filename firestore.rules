@@ -10,8 +10,21 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Equipo de Reservo: da de alta negocios y puede entrar a
+    // revisarlos y configurarlos. Debe coincidir con correoAdmin de
+    // public/firebase-config.js y ADMIN_EMAILS de Netlify.
+    function esAdmin() {
+      return request.auth != null && request.auth.token.email == 'alejandrosant2001@gmail.com';
+    }
+
     function esDueno(negocioId) {
-      return request.auth != null && request.auth.uid == negocioId;
+      return request.auth != null && (request.auth.uid == negocioId || esAdmin());
+    }
+
+    // Membresía de cada negocio (la escribe el panel desde el servidor)
+    match /cuentas/{negocioId} {
+      allow read: if esDueno(negocioId);
+      allow write: if false;
     }
 
     match /negocios/{negocioId} {
@@ -31,11 +44,10 @@ service cloud.firestore {
 
     // Qué número de WhatsApp Business pertenece a qué negocio
     match /whatsappNumeros/{phoneNumberId} {
-      allow read: if request.auth != null && resource.data.negocioId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.negocioId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.negocioId == request.auth.uid
-        && request.resource.data.negocioId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.negocioId == request.auth.uid;
+      allow read: if esDueno(resource.data.negocioId);
+      allow create: if esDueno(request.resource.data.negocioId);
+      allow update: if esDueno(resource.data.negocioId) && esDueno(request.resource.data.negocioId);
+      allow delete: if esDueno(resource.data.negocioId);
     }
   }
 }

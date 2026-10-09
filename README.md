@@ -76,6 +76,37 @@ son idénticas.
 | Bot | "Bienvenid@ a *Spa Luna*. Soy Sofi…" — "cita" | "¡Qué más! 💈 Bienvenido a *El Clásico*. Soy Max…" — "turno" |
 | Celebraciones | "¡Pago recibido!" 💖 / "¡Nuevo cliente!" 🌸 | "¡Billete a la caja!" 💵 / "¡Cliente nuevo en la silla!" 💈 |
 
+### 🛠️ Panel Reservo (administrador) y membresía
+
+Reservo se vende por **membresía de US$30 al mes**: nadie puede crear su
+cuenta solo. En la pantalla de entrada aparece *"¿Aún no tienes una
+cuenta?"* con enlace al WhatsApp del equipo.
+
+Al entrar con el correo del equipo (`correoAdmin` en
+`public/firebase-config.js`, hoy `alejandrosant2001@gmail.com`) se abre el
+**Panel Reservo** en vez de un negocio:
+
+- **+ Nuevo negocio:** nombre, tipo, correo y clave inicial (se genera sola). Crea
+  la cuenta y, si ya pagó, registra el primer mes. Luego te deja **enviarle los datos
+  por WhatsApp** y **configurarlo ahora**.
+- **Entrar / Configurar:** abres la app de ese negocio tal como la ve el dueño
+  (agenda, caja, clientes, ajustes, bot) con la franja *Modo administrador · Volver
+  al panel*. Si aún no está configurado, sale el asistente con su nombre y tipo.
+- **Actividad:** citas del mes, clientes, último ingreso, última cita y si tiene WhatsApp conectado.
+- **Membresía:** registrar pago (calcula el próximo cobro), ver vencidos, y
+  **pausar/activar** la cuenta (pausada = no puede entrar; sus datos no se borran).
+- **Más…:** nota interna, WhatsApp del dueño y enviarle el correo para cambiar la clave.
+
+Para que funcione:
+1. Tu correo debe tener cuenta: créala una vez en Firebase → **Authentication → Usuarios → Agregar usuario**.
+2. En Netlify debe estar `FIREBASE_SERVICE_ACCOUNT` (lo usa `/api/admin` para crear cuentas).
+3. Publica las reglas nuevas de `firestore.rules` (dan acceso al administrador).
+4. Recomendado: en Firebase → **Authentication → Configuración → Acciones del usuario**,
+   desmarca **Habilitar creación (registro)**, para que solo el panel pueda crear cuentas.
+
+Para cambiar o agregar administradores: `correoAdmin` (app), `esAdmin()` en
+`firestore.rules` y la variable `ADMIN_EMAILS` en Netlify (separados por coma).
+
 ### ⚡ Diseño tecnológico (por defecto)
 
 El mismo look de la página web de Reservo: fondo oscuro con cuadrícula,

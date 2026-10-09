@@ -53,7 +53,7 @@ function secciones() {
 function pintar() {
   if (!cont) return;
   cont.innerHTML = `
-    <div class="cab-vista"><h2>Ajustes</h2><span class="peq suave">${esc(E.usuario?.email || "")}</span></div>
+    <div class="cab-vista"><h2>Ajustes</h2><span class="peq suave">${esc(E.adminViendo?.correo || E.usuario?.email || "")}</span></div>
     <div class="menu-ajustes">
       ${secciones().map(([k, ico, t, d]) => `<button class="tarjeta" data-s="${k}"><span class="ico">${ico}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}
     </div>
@@ -814,7 +814,9 @@ const PAISES = {
 };
 
 export function asistenteInicial() {
-  const sugerido = document.documentElement.dataset.estilo === "barberia" ? "barberia" : "spa";
+  // El administrador ya eligió el tipo y el nombre al dar de alta
+  const alta = E.adminViendo;
+  const sugerido = RUBROS[alta?.rubro] ? alta.rubro : document.documentElement.dataset.estilo === "barberia" ? "barberia" : "spa";
   abrirModal({
     titulo: "¡Hola! Configuremos tu negocio",
     ancho: "ancho",
@@ -833,7 +835,7 @@ export function asistenteInicial() {
         </div>
       </fieldset>
       <label class="check"><input type="checkbox" name="tecno" id="tecno-ini" checked /> Diseño tecnológico oscuro (como la página de Reservo)</label>
-      <label>Nombre del negocio<input name="nombre" required id="nombre-ini" placeholder="Ej. Spa Luna" /></label>
+      <label>Nombre del negocio<input name="nombre" required id="nombre-ini" placeholder="Ej. Spa Luna" value="${esc(alta?.nombre || "")}" /></label>
       <div class="dos-col">
         <label>País<select name="pais">${Object.entries(PAISES).map(([k, p]) => `<option value="${k}">${p.nombre}</option>`).join("")}</select></label>
         <label>Nombre del asistente de WhatsApp<input name="asistente" id="asis-ini" value="${RUBROS[sugerido].asistente}" /></label>
