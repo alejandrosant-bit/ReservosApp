@@ -8,14 +8,14 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Reservo" />
 <meta property="og:title" content="Reservo" />
-<meta property="og:description" content="Reservo: tu negocio agenda solo por WhatsApp. Agenda, clientes y caja para spas, barberías, consultorios, taxis y más." />
+<meta property="og:description" content="Reservo: tu negocio agenda solo por WhatsApp. Agenda de citas médicas, clientes y caja para consultorios, odontología, spas, barberías y más." />
 <meta property="og:url" content="https://reservoapp.netlify.app/sitio/" />
 <meta property="og:image" content="https://reservoapp.netlify.app/icon-reservo-512.png" />
 <meta property="og:image:width" content="512" />
 <meta property="og:image:height" content="512" />
 <meta name="twitter:card" content="summary" />
 <title>Reservo</title>
-<meta name="description" content="Reservo: tu negocio agenda solo por WhatsApp. Agenda, clientes y caja para spas, barberías, consultorios, taxis y más." />
+<meta name="description" content="Reservo: tu negocio agenda solo por WhatsApp. Agenda de citas médicas, clientes y caja para consultorios, odontología, spas, barberías y más." />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" />
 <style>
 /* Concepto: "el motor detrás de tu agenda". Fondo oscuro tipo consola,
@@ -304,6 +304,18 @@ p { margin: 0; }
 .placa { font: 600 13px var(--mono); letter-spacing: .08em; background: #f5b800; color: #18181b; border-radius: 6px; padding: 2px 8px; }
 .estado { font: 600 12px var(--mono); color: var(--ok); display: inline-flex; align-items: center; gap: 6px; }
 
+/* Agenda de citas médicas */
+.agenda-med { border-radius: 18px; border: 1px solid var(--borde-2); background: #0d0b0a; padding: 14px; display: grid; gap: 8px; }
+.agenda-med-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; padding: 2px 4px 8px; }
+.turno { display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 12px; background: rgba(255,236,218,.04); border: 1px solid var(--borde); font-size: 14px; }
+.turno time { font: 600 13px var(--mono); color: var(--tenue); }
+.turno small { display: block; color: var(--tenue); font-size: 12.5px; }
+.turno.libre { border-style: dashed; background: none; opacity: .75; }
+.turno.nuevo { border-color: rgba(94,231,212,.45); background: rgba(94,231,212,.07); }
+.marca-ok, .marca-nueva { font: 600 11.5px var(--mono); border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
+.marca-ok { background: rgba(74,222,128,.12); color: var(--ok); }
+.marca-nueva { background: rgba(94,231,212,.16); color: var(--cian); }
+
 /* Precio */
 .precio-marco { max-width: 560px; margin-inline: auto; border-radius: 26px; padding: 1.5px; background: conic-gradient(from var(--giro, 0deg), rgba(227,166,110,.9), rgba(94,231,212,.7), transparent 35%, transparent 65%, rgba(227,166,110,.9)); animation: gira 7s linear infinite; }
 .precio { border-radius: 25px; padding: 34px 30px; background: radial-gradient(70% 60% at 50% 0%, rgba(227,166,110,.16), transparent 70%), #0f0c0a; display: grid; gap: 18px; }
@@ -390,7 +402,7 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
       <div class="portada-texto">
         <span class="etiqueta"><span class="punto"></span>Bot de WhatsApp · Agenda · Caja</span>
         <h1>Tu negocio agenda <span class="grad">solo</span>, por WhatsApp.</h1>
-        <p class="escribe" aria-live="off"><span aria-hidden="true">&gt; para </span><b id="tipeo">spas</b><span class="cursor" aria-hidden="true"></span></p>
+        <p class="escribe" aria-live="off"><span aria-hidden="true">&gt; para </span><b id="tipeo">consultorios médicos</b><span class="cursor" aria-hidden="true"></span></p>
         <p class="bajada">Tus clientes escriben como siempre: <em>quiero una cita el jueves a las 3</em>. Reservo entiende, ofrece solo horas libres, agenda, recuerda y te avisa en el celular. Caja y clientes en el mismo lugar.</p>
         <div class="acciones">
           <a class="btn btn-pri" href="https://wa.me/573118686298?text=Hola%2C%20quiero%20crear%20mi%20cuenta%20en%20Reservo" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Crear mi cuenta</a>
@@ -406,8 +418,8 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
 
       <div class="visor">
         <div class="cambiar-negocio" role="group" aria-label="Ver la conversación de otro tipo de negocio">
-          <button type="button" data-chat="spa" aria-pressed="true">💆 Spa</button>
-          <button type="button" data-chat="consultorio" aria-pressed="false">🩺 Consultorio</button>
+          <button type="button" data-chat="consultorio" aria-pressed="true">🩺 Citas médicas</button>
+          <button type="button" data-chat="spa" aria-pressed="false">💆 Spa</button>
           <button type="button" data-chat="barberia" aria-pressed="false">💈 Barbería</button>
           <button type="button" data-chat="taxi" aria-pressed="false">🚕 Taxis</button>
         </div>
@@ -430,9 +442,9 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
     <p>Hecho para negocios que viven de las citas y los pedidos</p>
     <div class="cinta-mascara">
       <div class="pista">
-        <span>💆 Spas</span><span>💇 Peluquerías</span><span>💅 Uñas</span><span>💈 Barberías</span><span>🩺 Consultorios</span><span>🦷 Odontología</span><span>🧠 Psicología</span>
+        <span>💆 Spas</span><span>💇 Peluquerías</span><span>💅 Uñas</span><span>💈 Barberías</span><span>🩺 Consultorios médicos</span><span>🦷 Odontología</span><span>🧠 Psicología</span>
         <span>🦴 Fisioterapia</span><span>🐾 Veterinarias</span><span>🏋️ Gimnasios</span><span>🖋️ Tatuajes</span><span>🚗 Lavaderos y talleres</span><span>💼 Abogados y contadores</span><span>🚕 Líneas de taxis</span>
-        <span aria-hidden="true">💆 Spas</span><span aria-hidden="true">💇 Peluquerías</span><span aria-hidden="true">💅 Uñas</span><span aria-hidden="true">💈 Barberías</span><span aria-hidden="true">🩺 Consultorios</span><span aria-hidden="true">🦷 Odontología</span><span aria-hidden="true">🧠 Psicología</span>
+        <span aria-hidden="true">💆 Spas</span><span aria-hidden="true">💇 Peluquerías</span><span aria-hidden="true">💅 Uñas</span><span aria-hidden="true">💈 Barberías</span><span aria-hidden="true">🩺 Consultorios médicos</span><span aria-hidden="true">🦷 Odontología</span><span aria-hidden="true">🧠 Psicología</span>
         <span aria-hidden="true">🦴 Fisioterapia</span><span aria-hidden="true">🐾 Veterinarias</span><span aria-hidden="true">🏋️ Gimnasios</span><span aria-hidden="true">🖋️ Tatuajes</span><span aria-hidden="true">🚗 Lavaderos y talleres</span><span aria-hidden="true">💼 Abogados y contadores</span><span aria-hidden="true">🚕 Líneas de taxis</span>
       </div>
     </div>
@@ -462,7 +474,7 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
       <div class="cabeza-seccion revelar">
         <span class="etiqueta">Plataforma completa</span>
         <h2>Deja de anotar citas en el cuaderno.</h2>
-        <p>Reservo se adapta a tu negocio: en un consultorio habla de consultas y pacientes, en una barbería de turnos, en una línea de taxis de pedidos y conductores.</p>
+        <p>Reservo se adapta a tu negocio: en un consultorio habla de consultas y pacientes, en una barbería de turnos, en un gimnasio de clases.</p>
       </div>
       <div class="funciones">
         <article class="funcion grande revelar">
@@ -563,43 +575,25 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
     </div>
   </section>
 
-  <section class="seccion" style="padding-top:0">
+  <section class="seccion" style="padding-top:0" id="citas-medicas">
     <div class="contenedor">
       <div class="taxi revelar">
         <div>
-          <span class="etiqueta">Para líneas de taxis</span>
-          <h2 style="margin-top:16px">Piden taxi por WhatsApp. Tu central asigna en un toque.</h2>
+          <span class="etiqueta">Para consultorios y clínicas</span>
+          <h2 style="margin-top:16px">Agenda de citas médicas que se llena sola por WhatsApp.</h2>
           <ul class="lista-check">
-            <li>El pasajero comparte su ubicación o escribe la dirección.</li>
-            <li>La central elige el conductor y el tiempo de llegada.</li>
-            <li>Al pasajero le llega la placa y el nombre del conductor.</li>
-            <li>Taxis programados: “mañana a las 5 am para el aeropuerto”.</li>
+            <li>El paciente pide su cita por WhatsApp a cualquier hora, sin llamar.</li>
+            <li>Cada médico o especialidad con su propia agenda y horarios.</li>
+            <li>Recordatorio automático antes de la consulta, para que no falten.</li>
+            <li>Historial de visitas y notas de cada paciente, siempre a la mano.</li>
           </ul>
         </div>
-        <div class="mapa" aria-label="Ejemplo: taxi en camino a recoger a la pasajera">
-          <svg viewBox="0 0 400 280" aria-hidden="true">
-            <defs>
-              <pattern id="cuadros" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(255,236,218,.05)"/></pattern>
-              <linearGradient id="g-ruta" x1="0" x2="1"><stop offset="0" stop-color="#e3a66e"/><stop offset="1" stop-color="#5ee7d4"/></linearGradient>
-            </defs>
-            <rect width="400" height="280" fill="url(#cuadros)"/>
-            <g fill="none" stroke="rgba(255,236,218,.12)" stroke-width="10" stroke-linecap="round">
-              <path d="M-10 70H410M-10 170H410M90 -10V290M250 -10V290M330 -10V290M-10 240 170 110 410 30"/>
-            </g>
-            <rect x="110" y="88" width="120" height="66" rx="6" fill="rgba(255,236,218,.03)"/><rect x="270" y="88" width="44" height="66" rx="6" fill="rgba(255,236,218,.03)"/>
-            <path id="ruta" d="M30 240 L90 196 L90 170 L250 170 L250 70 L330 70" fill="none" stroke="url(#g-ruta)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 7">
-              <animate attributeName="stroke-dashoffset" from="60" to="0" dur="1.6s" repeatCount="indefinite"/>
-            </path>
-            <g transform="translate(330 70)">
-              <circle r="8" fill="#5ee7d4"/>
-              <circle r="8" fill="none" stroke="#5ee7d4" stroke-width="2"><animate attributeName="r" from="8" to="28" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" from="1" to="0" dur="1.8s" repeatCount="indefinite"/></circle>
-            </g>
-            <g>
-              <rect x="-11" y="-7" width="22" height="14" rx="4" fill="#f5b800"/><rect x="-5" y="-4" width="10" height="8" rx="1.5" fill="#18181b" opacity=".55"/>
-              <animateMotion dur="7s" repeatCount="indefinite" rotate="auto" keyPoints="0;1;1" keyTimes="0;.85;1" calcMode="linear"><mpath href="#ruta"/></animateMotion>
-            </g>
-          </svg>
-          <div class="tarjeta"><span><b>Juan Pérez</b> · Hyundai Atos <span class="placa">TAX 123</span></span><span class="estado"><span class="punto"></span>llega en 5 min</span></div>
+        <div class="agenda-med" aria-label="Ejemplo: agenda del día de un consultorio">
+          <div class="agenda-med-cab"><span><b>Hoy</b> · Dra. Ruiz</span><span class="estado"><span class="punto"></span>bot agendando</span></div>
+          <div class="turno"><time>8:00</time><div><b>Pedro Gómez</b><small>Medicina general</small></div><span class="marca-ok">confirmada</span></div>
+          <div class="turno"><time>9:30</time><div><b>Ana Torres</b><small>Control</small></div><span class="marca-ok">confirmada</span></div>
+          <div class="turno libre"><time>11:00</time><div><b>Disponible</b><small>El bot la ofrece a quien escriba</small></div></div>
+          <div class="turno nuevo"><time>2:00</time><div><b>María López</b><small>Primera vez · agendada por WhatsApp</small></div><span class="marca-nueva">nueva</span></div>
         </div>
       </div>
     </div>
@@ -724,7 +718,7 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 /* ---------- Texto que se escribe solo ---------- */
 (async () => {
   const el = document.getElementById("tipeo");
-  const palabras = ["spas", "barberías", "consultorios", "odontólogos", "veterinarias", "gimnasios", "líneas de taxis", "tu negocio"];
+  const palabras = ["consultorios médicos", "odontólogos", "spas", "barberías", "veterinarias", "gimnasios", "tu negocio"];
   if (quieto) return;
   for (let i = 0; ; i = (i + 1) % palabras.length) {
     const w = palabras[i];
@@ -746,7 +740,7 @@ const CHATS = {
   taxi: { ico: "🚕", nombre: "Taxis Express", aviso: ["¡Nueva solicitud de taxi!", "Cra 7 # 32-16 · Laura → Aeropuerto"],
     m: [["yo", "Necesito un taxi para el aeropuerto"], ["bot", "¡Hola, Laura! 🚕 ¿Dónde te recogemos? Envía tu 📍 ubicación o escribe la dirección."], ["yo", "📍 Ubicación: Cra 7 # 32-16, Centro"], ["bot", "🚕 ¡Tu taxi va en camino!\nConductor: Juan Pérez · Placa TAX 123\nLlega en unos 5 minutos."]] },
 };
-const ORDEN = ["spa", "consultorio", "barberia", "taxi"];
+const ORDEN = ["consultorio", "spa", "barberia", "taxi"];
 let turno = 0, automatico = true;
 const $ = (id) => document.getElementById(id);
 function pieza(tipo, t, sel) {
@@ -785,7 +779,7 @@ async function reproducir(id) {
 }
 function destacar(cual) { const f = document.querySelector(".flota." + cual); f.classList.remove("ver"); void f.offsetWidth; f.classList.add("ver"); }
 document.querySelectorAll("[data-chat]").forEach((b) => b.addEventListener("click", () => { automatico = false; reproducir(b.dataset.chat); }));
-reproducir("spa");
+reproducir("consultorio");
 
 /* ---------- Terminal: así entiende el bot ---------- */
 (async () => {
@@ -795,7 +789,7 @@ reproducir("spa");
   const casos = [
     ["mañana en la tarde a las 4 y media, masaje", [["intención", "agendar"], ["fecha", `${f} (${dias[man.getDay()]})`], ["hora", "16:30"], ["servicio", "Masaje relajante"], ["cupo", "libre con Laura"]], "✔ cita confirmada en 1,2 s"],
     ["quiero cancelar mi cita, soy Ana Gómez", [["intención", "cancelar"], ["cliente", "Ana Gómez"], ["cita", "viernes 10:00 · Uñas"], ["aviso", "≥ 2 h antes ✔"]], "✔ cancelada · hueco liberado"],
-    ["necesito un taxi para el aeropuerto", [["intención", "pedir taxi"], ["destino", "Aeropuerto"], ["origen", "📍 ubicación compartida"], ["central", "notificada"]], "✔ solicitud enviada a la central"],
+    ["necesito cita con medicina general, temprano", [["intención", "agendar consulta"], ["servicio", "Medicina general"], ["franja", "mañana"], ["cupos", "8:00 · 9:30 · 11:00"]], "✔ horarios ofrecidos al paciente"],
   ];
   const linea = (html) => { const d = document.createElement("div"); d.innerHTML = html; t.append(d); return d; };
   for (let i = 0; ; i = (i + 1) % casos.length) {
