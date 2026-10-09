@@ -1186,3 +1186,17 @@ main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--su
 [data-estilo="tecno"] .marca-agua { background: rgba(17, 13, 11, .85); border-color: var(--borde); color: var(--suave); backdrop-filter: blur(10px); box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
 [data-estilo="tecno"] .marca-agua b { color: #f7d5b0; }
 [data-estilo="tecno"] .solicitudes .cita { animation-name: tc-entra, latido-pedido; }
+
+/* Enlace "¿Aún no tienes una cuenta?" → WhatsApp del equipo Reservo */
+.login .login-whatsapp {
+  display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; text-decoration: none;
+  color: var(--tc-texto); background: rgba(37, 211, 102, .08); border: 1px solid rgba(37, 211, 102, .35);
+  transition: transform .25s var(--rebote), box-shadow .25s, border-color .25s;
+}
+.login-whatsapp:hover { transform: translateY(-2px); border-color: rgba(37, 211, 102, .7); box-shadow: 0 10px 30px -10px rgba(37, 211, 102, .6); }
+.login-whatsapp:focus-visible { outline: 2px solid var(--tc-cian); outline-offset: 3px; }
+.login-whatsapp b { display: block; font-size: 15px; }
+.login-whatsapp small { display: block; color: var(--tc-suave); font-size: 13px; }
+.login-wa-ico { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; background: #25d366; color: #fff; box-shadow: 0 0 0 0 rgba(37, 211, 102, .5); animation: tc-wa 2.4s ease-out infinite; }
+.login-wa-ico svg { width: 22px; height: 22px; }
+@keyframes tc-wa { 70%, 100% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } }

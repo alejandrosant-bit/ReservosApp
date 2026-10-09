@@ -58,6 +58,9 @@ function prepararLogin() {
   if (cfgFirebase.permitirRegistro) {
     cambiar.classList.remove("oculto");
     pestanas.classList.remove("oculto");
+  } else {
+    // Membresía: las cuentas las crea el equipo de Reservo
+    $("#login-whatsapp").classList.remove("oculto");
   }
   cambiar.onclick = () => ponerModo(!modoRegistro);
   $("#tab-entrar").onclick = () => ponerModo(false);

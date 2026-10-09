@@ -20,8 +20,9 @@ export const vapidKey = "";
 
 // true = cualquiera puede crear su cuenta desde la pantalla de
 // entrada (útil si vendes el sistema a varios negocios).
-// false = solo tú creas las cuentas en Firebase → Authentication.
-export const permitirRegistro = true;
+// false = solo tú creas las cuentas en Firebase → Authentication
+// (membresía: quien no tiene cuenta ve un enlace a tu WhatsApp).
+export const permitirRegistro = false;
 
 // Estilo de la pantalla de entrada para este despliegue:
 // "tecno" (oscuro, el de la página de Reservo), "belleza" o "barberia".
