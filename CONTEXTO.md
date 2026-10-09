@@ -75,6 +75,9 @@ deben mezclar.
 - Prueba de punta a punta: `node test/e2e/chats.e2e.mjs`.
 
 ## Decisiones tomadas
+- Página de ventas: dos planes, **Reservo US$30** (hasta 30 citas al día) y **Reservo Pro US$45** (negocios grandes).
+  No se menciona el cobro de mensajes de Meta. Firma "hecho por Nuvex". Se destacan las citas médicas, no los taxis.
+  (El panel de administrador todavía maneja una sola membresía de US$30.)
 - Nombre **Reservo**. Marca café pastel (Cacao #5B4033, Caramelo #B9875E, Crema #F3E7DA) con
   letra Comfortaa en el logo. Sello "hecho con reservo" en la app.
 - **Diseño tecnológico oscuro** (ámbar #E3A66E + cian #5EE7D4, Space Grotesk / Inter / JetBrains Mono)

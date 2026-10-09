@@ -333,6 +333,11 @@ p { margin: 0; }
 .precio-valor span { color: var(--suave); font-size: 16px; }
 .precio .lista-check { margin: 0; }
 .precio .btn { width: 100%; }
+.planes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; max-width: 1000px; margin-inline: auto; align-items: stretch; }
+.planes .precio-marco { max-width: none; margin: 0; display: grid; }
+.planes .precio { align-content: start; }
+.plan-grande { border: 1px solid var(--borde-2); background: #0f0c0a; }
+@media (max-width: 860px) { .planes { grid-template-columns: 1fr; max-width: 560px; } }
 .precio-nota { font-size: 13.5px; color: var(--tenue); text-align: center; }
 
 /* Preguntas */
@@ -551,7 +556,7 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
       </div>
       <ol class="pasos">
         <li class="revelar"><h3>Escríbenos por WhatsApp</h3><p>Te creamos la cuenta con tu tipo de negocio: servicios, horarios y mensajes de ejemplo listos. Solo ajustas precios.</p></li>
-        <li class="revelar"><h3>Conectamos tu número</h3><p>Usamos la API oficial de WhatsApp Business. Las primeras 1.000 respuestas del mes son gratis.</p></li>
+        <li class="revelar"><h3>Conectamos tu número</h3><p>Usamos la API oficial de WhatsApp Business y lo dejamos funcionando por ti.</p></li>
         <li class="revelar"><h3>Recibe reservas</h3><p>Tus clientes escriben, el bot agenda y tú ves todo en la agenda con sonido y notificación.</p></li>
       </ol>
     </div>
@@ -611,31 +616,51 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
     <div class="contenedor">
       <div class="cabeza-seccion revelar" style="margin-inline:auto;text-align:center;justify-items:center">
         <span class="etiqueta">Membresía</span>
-        <h2>Un solo plan. Todo incluido.</h2>
+        <h2>Dos planes. Todo incluido.</h2>
         <p>Sin contratos de permanencia: pagas mes a mes y cancelas cuando quieras.</p>
       </div>
-      <div class="precio-marco revelar">
-        <div class="precio">
+      <div class="planes">
+        <div class="precio-marco revelar">
+          <div class="precio">
+            <div class="precio-cab">
+              <div>
+                <h3>Reservo</h3>
+                <span style="color:var(--suave);font-size:15px">hasta 30 citas al día</span>
+              </div>
+              <span class="etiqueta"><span class="punto"></span>el más elegido</span>
+            </div>
+            <div class="precio-valor"><b>US$30</b><span>/ mes</span></div>
+            <ul class="lista-check">
+              <li>Bot de WhatsApp 24/7 con el nombre y el tono de tu negocio.</li>
+              <li>Agenda para todo tu equipo, con recordatorios automáticos.</li>
+              <li>Caja multimoneda con arqueo diario, semanal y mensual.</li>
+              <li>Base de clientes, reportes y avisos en el celular.</li>
+              <li>Funciona sin internet, en celular y computador.</li>
+              <li>Te creamos la cuenta y te ayudamos a conectar tu WhatsApp.</li>
+            </ul>
+            <a class="btn btn-pri" href="https://wa.me/573118686298?text=Hola%2C%20quiero%20crear%20mi%20cuenta%20en%20Reservo" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Quiero mi cuenta</a>
+          </div>
+        </div>
+        <div class="precio plan-grande revelar">
           <div class="precio-cab">
             <div>
-              <h3>Reservo</h3>
-              <span style="color:var(--suave);font-size:15px">para tu negocio completo</span>
+              <h3>Reservo Pro</h3>
+              <span style="color:var(--suave);font-size:15px">más de 30 citas al día</span>
             </div>
-            <span class="etiqueta"><span class="punto"></span>todo incluido</span>
+            <span class="etiqueta">negocios grandes</span>
           </div>
-          <div class="precio-valor"><b>US$30</b><span>/ mes</span></div>
+          <div class="precio-valor"><b>US$45</b><span>/ mes</span></div>
           <ul class="lista-check">
-            <li>Bot de WhatsApp 24/7 con el nombre y el tono de tu negocio.</li>
-            <li>Agenda para todo tu equipo, con recordatorios automáticos.</li>
-            <li>Caja multimoneda con arqueo diario, semanal y mensual.</li>
-            <li>Base de clientes, reportes y avisos en el celular.</li>
-            <li>Funciona sin internet, en celular y computador.</li>
-            <li>Te creamos la cuenta y te ayudamos a conectar tu WhatsApp.</li>
+            <li>Todo lo del plan Reservo.</li>
+            <li>Pensado para clínicas, centros con varias sedes o equipos grandes.</li>
+            <li>Alto volumen de mensajes de WhatsApp incluido.</li>
+            <li>Sin límite de citas diarias ni de personas en la agenda.</li>
+            <li>Atención prioritaria por WhatsApp.</li>
           </ul>
-          <a class="btn btn-pri" href="https://wa.me/573118686298?text=Hola%2C%20quiero%20crear%20mi%20cuenta%20en%20Reservo" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Quiero mi cuenta</a>
-          <p class="precio-nota">Los mensajes de WhatsApp los cobra Meta directo a tu número: las primeras 1.000 respuestas del mes son gratis.</p>
+          <a class="btn btn-sec" href="https://wa.me/573118686298?text=Hola%2C%20quiero%20el%20plan%20Reservo%20Pro" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-wa"/></svg>Quiero Reservo Pro</a>
         </div>
       </div>
+      <p class="precio-nota" style="margin-top:18px">¿No sabes cuál te sirve? Empieza con el de US$30; si tu negocio crece, te pasamos al Pro.</p>
     </div>
   </section>
 
@@ -646,8 +671,8 @@ details p { color: var(--suave); margin-top: 10px; font-size: 15.5px; }
         <h2>Lo que más nos preguntan.</h2>
       </div>
       <div class="preguntas revelar">
-        <details open><summary>¿Cuánto cuesta?</summary><p>US$30 al mes con todo incluido: bot de WhatsApp, agenda, caja, clientes y reportes. Sin permanencia: cancelas cuando quieras. Escríbenos por WhatsApp y te creamos la cuenta.</p></details>
-        <details><summary>¿Necesito pagar WhatsApp aparte?</summary><p>Reservo usa la API oficial de WhatsApp Business de Meta. Responder a los clientes que te escriben incluye 1.000 mensajes gratis al mes por número; después, Meta cobra centavos de dólar por mensaje. Los recordatorios también cuestan centavos.</p></details>
+        <details open><summary>¿Cuánto cuesta?</summary><p>US$30 al mes con todo incluido: bot de WhatsApp, agenda, caja, clientes y reportes. Para negocios grandes, con más de 30 citas al día, está Reservo Pro por US$45 al mes. Sin permanencia: cancelas cuando quieras. Escríbenos por WhatsApp y te creamos la cuenta.</p></details>
+        <details><summary>¿Qué plan me conviene?</summary><p>Si atiendes hasta 30 citas al día, el plan de US$30 te alcanza de sobra. Si tu negocio es más grande (una clínica, varias sedes o un equipo numeroso), el plan Pro de US$45 está hecho para ese volumen. Puedes empezar con el de US$30 y cambiar cuando lo necesites.</p></details>
         <details><summary>¿Qué pasa si se va el internet?</summary><p>La app sigue funcionando: puedes ver la agenda, cobrar y agendar. Todo queda guardado en el celular y se sube solo cuando vuelve la señal.</p></details>
         <details><summary>¿Qué pasa si dos personas piden la misma hora?</summary><p>Solo una la obtiene. A la otra el bot le ofrece al instante las horas libres más cercanas.</p></details>
         <details><summary>¿Sirve en celular y en computador?</summary><p>Sí. Se abre en el navegador y se instala como app en Android, iPhone y computador.</p></details>
