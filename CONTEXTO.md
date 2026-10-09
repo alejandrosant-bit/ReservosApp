@@ -28,12 +28,13 @@ deben mezclar.
 ## Cómo está hecho
 - **Sin compilación**: JavaScript moderno (módulos ES) en `public/`. Firebase 10.14.1 desde el CDN de gstatic.
 - **Funciona sin internet**: Firestore con caché persistente + service worker (`public/sw.js`).
-  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v18`)
+  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v19`)
   y agregar archivos nuevos a la lista `ARCHIVOS`.
 - **Servidor**: Netlify Functions en `netlify/functions/` (usan `firebase-admin`):
   - `whatsapp.mjs` → `/api/whatsapp`: webhook de WhatsApp Cloud API (Meta), firma HMAC.
   - `avisar-cliente.mjs` → `/api/avisar-cliente`: avisa al pasajero (taxis) por WhatsApp.
   - `recordatorios.mjs`: función programada cada 30 min.
+  - `chat.mjs` → `/api/chat`: el dueño responde a un cliente desde la pestaña Chats (pausa el bot 1 h).
   - `admin.mjs` → `/api/admin`: Panel Reservo (listar, crear, estado, pago, nota). Solo administradores.
   - `lib/admin.mjs`: quién es administrador (`ADMIN_EMAILS` o el correo por defecto).
 - **Pruebas**: `npm test` (24 pruebas unitarias). De punta a punta con Playwright y un Firebase falso:
@@ -51,7 +52,8 @@ deben mezclar.
 | `bot.js` + `nlp.js` | Bot de WhatsApp (máquina de estados) y lectura de fechas/horas en español |
 | `ui.js` | Ventanas, avisos, celebraciones, sonido, fondo personalizado |
 | `red.js` | Red de partículas animada de la entrada |
-| `vistas/*.js` | agenda, clientes, caja, cobro, reportes, ajustes (incluye asistente inicial), simulador, viajes (taxis), **admin** |
+| `vistas/*.js` | agenda, clientes, caja, cobro, reportes, ajustes (incluye asistente inicial), simulador, viajes (taxis), **chats** (bandeja de WhatsApp), **admin** |
+| `chat.js` | Reglas de la bandeja de chats (historial de 60 mensajes, ventana de 24 h, pausa del bot) |
 | `firebase-config.js` | Config de Firebase, `permitirRegistro = false`, `correoAdmin`, `estiloPorDefecto = "tecno"` |
 | `sitio/index.html` | Página web de ventas (estilo tecnológico, precio US$30, botones a WhatsApp) |
 | `marca/` | Logotipo e isotipo (burbuja de chat + calendario + chulo), colores café pastel |
@@ -64,6 +66,13 @@ deben mezclar.
 - Fechas guardadas como texto local ("YYYY-MM-DD", "HH:MM") en la zona del negocio.
 - Doble reserva: transacción con un candado por día (`bloqueos/{fecha}`).
 - Reglas en `firestore.rules`: cada dueño solo ve lo suyo; `esAdmin()` (correo del administrador) ve todo.
+
+### Bandeja de chats
+- Cada conversación (`conversaciones/{telefono}`) guarda sus últimos 60 mensajes (`mensajes`), `noLeidos`,
+  `pideHumano`, `ultimoClienteMs` (ventana de 24 h de WhatsApp) y `pausaHasta` (bot en pausa).
+- El bot avisa al negocio cuando el cliente pide una persona o no lo entiende dos veces seguidas.
+- Si el dueño responde desde Chats, el bot se pausa 1 hora en ese chat; "Devolver al bot" lo reactiva.
+- Prueba de punta a punta: `node test/e2e/chats.e2e.mjs`.
 
 ## Decisiones tomadas
 - Nombre **Reservo**. Marca café pastel (Cacao #5B4033, Caramelo #B9875E, Crema #F3E7DA) con

@@ -8,6 +8,9 @@ import { procesarMensaje } from "../../public/bot.js";
 import { firebase } from "./lib/firebase.mjs";
 import { crearStoreFirestore, negocioDeNumero } from "./lib/store-firestore.mjs";
 import { enviarWhatsapp, marcarLeido, firmaValida, tokenDe } from "./lib/whatsapp-api.mjs";
+import { refConversacion, registrarMensajes } from "./lib/chat.mjs";
+import { avisarMensaje } from "./lib/notificar.mjs";
+import { mensajeDeChat, deSalidaDelBot, botPausado, etiquetaDeTipo } from "../../public/chat.js";
 
 export const config = { path: "/api/whatsapp" };
 
@@ -71,17 +74,24 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
   if (!token) throw new Error("Falta el token de WhatsApp del negocio " + negocioId);
   marcarLeido({ phoneNumberId, token, messageId: mensaje.id });
 
+  // ¿Una persona del negocio tomó esta conversación? Entonces el bot
+  // no responde: el mensaje queda en la pestaña "Chats" y se le avisa.
+  const ms = Number(mensaje.timestamp) * 1000 || Date.now();
+  const conv = (await refConversacion(negocioId, mensaje.from).get()).data() || {};
+  const pausado = botPausado(conv);
+  const extra = nombrePerfil ? { nombrePerfil } : {};
+
   let texto = "";
   let opcionId = null;
   let ubicacion = null;
+  let soportado = true;
   if (mensaje.type === "text") texto = mensaje.text?.body || "";
   else if (mensaje.type === "location") {
     // Ubicación compartida desde WhatsApp (pedir taxi, domicilios...)
     const l = mensaje.location || {};
     ubicacion = { lat: l.latitude, lng: l.longitude, nombre: l.name || "", direccion: l.address || "" };
     texto = [l.name, l.address].filter(Boolean).join(" ");
-  }
-  else if (mensaje.type === "interactive") {
+  } else if (mensaje.type === "interactive") {
     const r = mensaje.interactive?.button_reply || mensaje.interactive?.list_reply;
     opcionId = r?.id || null;
     texto = r?.title || "";
@@ -89,12 +99,21 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
     // Botón de una plantilla (ej. "Cancelar" en el recordatorio)
     texto = mensaje.button?.text || "";
   } else {
-    await enviarWhatsapp({
-      phoneNumberId,
-      token,
-      para: mensaje.from,
-      mensaje: { tipo: "texto", texto: textoNoSoportado(mensaje.type) },
-    });
+    soportado = false;
+    texto = etiquetaDeTipo(mensaje.type);
+  }
+  const delCliente = mensajeDeChat("cliente", texto || (ubicacion ? "📍 Ubicación" : ""), ms);
+
+  if (pausado) {
+    await registrarMensajes(negocioId, mensaje.from, [delCliente], extra);
+    await avisarMensaje(negocioId, { telefono: mensaje.from, nombre: conv.nombre || nombrePerfil, texto: delCliente.texto }).catch((e) => console.error("avisarMensaje", e.message));
+    return;
+  }
+
+  if (!soportado) {
+    const aviso = { tipo: "texto", texto: textoNoSoportado(mensaje.type) };
+    await enviarWhatsapp({ phoneNumberId, token, para: mensaje.from, mensaje: aviso });
+    await registrarMensajes(negocioId, mensaje.from, [delCliente, deSalidaDelBot(aviso, Date.now())], extra);
     return;
   }
 
@@ -102,7 +121,7 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
   try {
     const store = await crearStoreFirestore(negocioId);
     ({ mensajes } = await procesarMensaje({ telefono: mensaje.from, nombrePerfil, texto, opcionId, ubicacion }, store, {
-      marcaTiempo: Number(mensaje.timestamp) * 1000 || Date.now(),
+      marcaTiempo: ms,
     }));
   } catch (e) {
     // Nunca dejar al cliente sin respuesta: se registra el error y se
@@ -124,16 +143,8 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
     }
   }
 
-  // Últimos mensajes de la conversación (para verlos en la app)
-  await db.doc(`negocios/${negocioId}/conversaciones/${mensaje.from}`).set(
-    {
-      nombrePerfil,
-      ultimoMensaje: texto.slice(0, 200),
-      ultimaRespuesta: (mensajes.at(-1)?.texto || "").slice(0, 300),
-      actualizado: FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  // Historial de la conversación (pestaña "Chats" de la app)
+  await registrarMensajes(negocioId, mensaje.from, [delCliente, ...mensajes.map((m) => deSalidaDelBot(m, Date.now()))], extra);
 }
 
 // Audios, fotos, stickers...: el bot solo lee texto. Se le dice al

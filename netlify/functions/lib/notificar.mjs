@@ -63,17 +63,23 @@ export async function notificarDueno(negocioId, evento, config = {}) {
   await Promise.all(borrar.filter(Boolean).map((ref) => ref.delete()));
 }
 
-async function avisarHumano(negocioId, { motivo, telefono, nombre, texto }, { db, messaging, FieldValue }) {
+async function avisarHumano(negocioId, { motivo, telefono, nombre, texto }, { db, FieldValue }) {
   const titulo = motivo === "no_entendio" ? "🙋 El bot no entendió a un cliente" : "🙋 Un cliente pide hablar con una persona";
   const cuerpo = `${nombre || "Cliente"} · +${telefono}${texto ? ` · “${texto}”` : ""}`;
   await db.collection(`negocios/${negocioId}/avisos`).add({ tipo: "humano", titulo, cuerpo, telefono, citaId: "", fecha: "", leido: false, creado: FieldValue.serverTimestamp() });
+  await empujar(negocioId, { titulo, cuerpo, tipo: "humano", citaId: "", fecha: "", url: `/#chats/${telefono}` });
+}
+
+// El cliente escribió mientras una persona atiende su conversación
+// (el bot está en pausa): solo notificación al celular, sin campanita.
+export async function avisarMensaje(negocioId, { telefono, nombre, texto }) {
+  await empujar(negocioId, { titulo: `💬 ${nombre || "+" + telefono}`, cuerpo: String(texto || "").slice(0, 140), tipo: "mensaje", citaId: "", fecha: "", url: `/#chats/${telefono}` });
+}
+
+async function empujar(negocioId, data) {
+  const { db, messaging } = firebase();
   const snap = await db.collection(`negocios/${negocioId}/dispositivos`).get();
   const tokens = snap.docs.map((d) => d.data().token).filter(Boolean);
   if (!tokens.length) return;
-  await messaging.sendEachForMulticast({
-    tokens,
-    data: { titulo, cuerpo, tipo: "humano", citaId: "", fecha: "", url: "/#agenda" },
-    webpush: { headers: { Urgency: "high", TTL: "86400" } },
-    android: { priority: "high" },
-  });
+  await messaging.sendEachForMulticast({ tokens, data, webpush: { headers: { Urgency: "high", TTL: "86400" } }, android: { priority: "high" } });
 }

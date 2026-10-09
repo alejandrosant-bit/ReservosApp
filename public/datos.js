@@ -67,6 +67,7 @@ export const E = {
   movimientos: [],
   cajas: [],
   avisos: [],
+  conversaciones: [], // chats de WhatsApp (pestaña "Chats")
   adminViendo: null, // negocio que el administrador está revisando
   desdeCargado: null, // fecha desde la que hay citas/movimientos en memoria
   cargado: {},
@@ -235,7 +236,7 @@ export function iniciarDatos(uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimie
   if (E.uid !== uid) {
     E.config = conDefectos({});
     E.configExiste = null;
-    for (const k of ["servicios", "profesionales", "clientes", "citas", "movimientos", "cajas", "avisos"]) E[k] = [];
+    for (const k of ["servicios", "profesionales", "clientes", "citas", "movimientos", "cajas", "avisos", "conversaciones"]) E[k] = [];
   }
   E.uid = uid;
   E.cargado = {};
@@ -273,6 +274,19 @@ export function iniciarDatos(uid, { alNuevoAviso, alNuevoCliente, alNuevoMovimie
       primeraCarga = false;
       avisar("avisos");
     })
+  );
+
+  // Chats de WhatsApp: las conversaciones más recientes, en vivo
+  desuscribir.push(
+    onSnapshot(
+      query(col("conversaciones"), orderBy("actualizado", "desc"), limit(50)),
+      (snap) => {
+        E.conversaciones = aLista(snap);
+        E.cargado.conversaciones = true;
+        avisar("conversaciones");
+      },
+      (err) => console.error("conversaciones", err)
+    )
   );
 }
 
@@ -354,5 +368,28 @@ export async function llamarAdmin(accion, datos = {}) {
     cuerpo = await r.json();
   } catch {}
   if (!r.ok) throw new Error(cuerpo.error || "El servidor no respondió. ¿Ya se desplegó en Netlify?");
+  return cuerpo;
+}
+
+// Responder a un cliente desde la pestaña "Chats". El mensaje sale
+// por el WhatsApp del negocio y el bot se pausa en esa conversación.
+export async function enviarChat(telefono, texto) {
+  if (!navigator.onLine) throw new Error("Sin internet: el mensaje no se pudo enviar.");
+  const token = await auth?.currentUser?.getIdToken?.();
+  let r;
+  try {
+    r = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token || ""}` },
+      body: JSON.stringify({ telefono, texto, negocioId: E.uid }),
+    });
+  } catch {
+    throw new Error("No se pudo conectar con el servidor.");
+  }
+  let cuerpo = {};
+  try {
+    cuerpo = await r.json();
+  } catch {}
+  if (!r.ok) throw new Error(cuerpo.error || "No se pudo enviar el mensaje");
   return cuerpo;
 }

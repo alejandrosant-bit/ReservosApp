@@ -140,6 +140,10 @@ export async function crearStoreFirestore(negocioId) {
 
     async notificar(evento) {
       try {
+        // Pide una persona: la conversación queda marcada en "Chats"
+        if (evento.tipo === "humano" && evento.telefono) {
+          await raiz.collection("conversaciones").doc(evento.telefono).set({ pideHumano: true, nombre: evento.nombre || "" }, { merge: true });
+        }
         await notificarDueno(negocioId, evento, config);
       } catch (e) {
         console.error("No se pudo notificar al dueño:", e);

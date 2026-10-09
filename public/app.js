@@ -11,6 +11,7 @@ import { iniciarRed } from "./red.js";
 const VISTAS = {
   agenda: () => import("./vistas/agenda.js"),
   clientes: () => import("./vistas/clientes.js"),
+  chats: () => import("./vistas/chats.js"),
   caja: () => import("./vistas/caja.js"),
   reportes: () => import("./vistas/reportes.js"),
   ajustes: () => import("./vistas/ajustes.js"),
@@ -172,6 +173,7 @@ window.addEventListener("hashchange", navegar);
 alCambiar((que) => {
   if (que === "sync") return pintarSync();
   if (que === "avisos") pintarAvisos();
+  if (que === "conversaciones") pintarNumChats();
   if (que === "config") aplicarMarca();
   try {
     vistaActual?.actualizar?.(que);
@@ -358,6 +360,14 @@ function pintarAvisos() {
   b.classList.toggle("oculto", !n);
 }
 
+// Chats que esperan respuesta (mensajes sin leer o piden una persona)
+function pintarNumChats() {
+  const n = E.conversaciones.filter((c) => c.noLeidos > 0 || c.pideHumano).length;
+  const b = $("#chats-num");
+  b.textContent = n > 9 ? "9+" : n;
+  b.classList.toggle("oculto", !n);
+}
+
 $("#btn-avisos").onclick = () => {
   const items = E.avisos
     .map(
@@ -373,8 +383,8 @@ $("#btn-avisos").onclick = () => {
     onAbrir(c, cerrar) {
       c.querySelectorAll("[data-fecha]").forEach((el) =>
         el.addEventListener("click", () => {
-          // Cliente que pidió atención: abre su chat de WhatsApp
-          if (el.dataset.tel) window.open(`https://wa.me/${el.dataset.tel}`, "_blank", "noopener");
+          // Cliente que pidió atención: abre su conversación en "Chats"
+          if (el.dataset.tel) location.hash = `chats/${el.dataset.tel}`;
           else if (el.dataset.fecha) location.hash = `agenda/${el.dataset.fecha}`;
           cerrar();
         })

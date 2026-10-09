@@ -70,11 +70,11 @@ main#contenido { padding: 14px 16px calc(96px + env(safe-area-inset-bottom)); ma
 
 .nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   background: var(--tarjeta); border-top: 1px solid var(--borde);
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
 }
-.nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; text-decoration: none; color: var(--suave); font-size: 11px; font-weight: 600; border-radius: 10px; }
+.nav a { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; text-decoration: none; color: var(--suave); font-size: 11px; font-weight: 600; border-radius: 10px; }
 .nav a .ico { font-size: 20px; line-height: 1.1; filter: grayscale(1); opacity: 0.75; }
 .nav a.activo { color: var(--pri); background: var(--pri-suave); }
 .nav a.activo .ico { filter: none; opacity: 1; }
@@ -1241,3 +1241,40 @@ main#contenido :is(.tarjeta, .kpi, .cita, .sugerencias) .suave { color: var(--su
 #vista-app.con-admin .barra { top: calc(40px + env(safe-area-inset-top)); padding-top: 10px; }
 @media (min-width: 900px) { #vista-app.con-admin .menu-lateral { top: 40px; height: calc(100vh - 40px); } }
 body:has(#vista-app.con-admin:not(.oculto)) #toasts { top: calc(env(safe-area-inset-top) + 50px); }
+
+/* ---------- Chats (bandeja de WhatsApp) ---------- */
+.nav a .burbuja { top: 0; right: 18%; }
+@media (min-width: 900px) { .nav a .burbuja { position: static; margin-left: auto; } }
+.chats { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.chats .tarjeta + .tarjeta { margin-top: 0; }
+.chats-lista { padding: 4px 10px; max-height: calc(100vh - 220px); overflow-y: auto; }
+.chats-lista .item { padding: 10px 6px; border-radius: 10px; }
+.chats-lista .item.activo { outline: 2px solid var(--pri); }
+.chats-corta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chats-n { background: var(--error); color: #fff; font-size: 11px; font-weight: 700; min-width: 19px; height: 19px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; flex: none; }
+.chats-hilo { display: none; flex-direction: column; gap: 8px; min-height: 0; }
+.chats.con-hilo .chats-lista { display: none; }
+.chats.con-hilo .chats-hilo { display: flex; }
+.chats-cab { display: flex; align-items: center; gap: 10px; }
+.chats-estado { background: var(--pri-suave); border-radius: 10px; padding: 7px 10px; }
+.chats-mensajes { height: calc(100vh - 470px); min-height: 220px; }
+.chats-mensajes .del-bot { opacity: 0.86; }
+.chats-quien { display: block; font-size: 11px; font-weight: 700; opacity: 0.7; margin-bottom: 2px; }
+.chats-hora { display: block; text-align: right; font-size: 10px; opacity: 0.6; margin-top: 2px; }
+.chats-ops { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.chats-ops span { border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; font-size: 12px; opacity: 0.75; }
+.chats-nota { background: var(--alerta-suave); color: var(--alerta); border-radius: 10px; padding: 8px 10px; }
+.chats-hilo .wa-entrada { margin-top: 0; flex-direction: row; align-items: flex-end; }
+.chats-hilo textarea { resize: none; min-height: 44px; max-height: 120px; }
+@media (min-width: 900px) {
+  .chats { grid-template-columns: 340px 1fr; align-items: start; }
+  .chats .chats-lista, .chats.con-hilo .chats-lista { display: block; }
+  .chats .chats-hilo { display: flex; }
+  .chats-volver { display: none; }
+  .chats-mensajes { height: calc(100vh - 360px); }
+}
+[data-estilo="tecno"] .chats-nota { background: color-mix(in srgb, var(--alerta) 18%, transparent); }
+.chats-hilo .wa-entrada textarea { flex: 1 1 0; width: auto; min-width: 0; }
+.chats-hilo .wa-entrada .btn { flex: none; }
+.chats-mensajes .burb { animation: none; }
+.chats > * { min-width: 0; }
