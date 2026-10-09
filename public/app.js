@@ -361,8 +361,8 @@ function pintarAvisos() {
 $("#btn-avisos").onclick = () => {
   const items = E.avisos
     .map(
-      (a) => `<div class="item ${a.leido ? "" : "no-leido"}" data-fecha="${esc(a.fecha || "")}" style="cursor:pointer">
-        <div class="avatar">${a.tipo === "cancelada" ? "❌" : "🔔"}</div>
+      (a) => `<div class="item ${a.leido ? "" : "no-leido"}" data-fecha="${esc(a.fecha || "")}" data-tel="${esc(a.tipo === "humano" ? a.telefono || "" : "")}" style="cursor:pointer">
+        <div class="avatar">${a.tipo === "cancelada" ? "❌" : a.tipo === "humano" ? "🙋" : "🔔"}</div>
         <div class="crece"><div class="negrita">${esc(a.titulo)}</div><div class="peq suave">${esc(a.cuerpo)}</div>
         <div class="mini suave">${a.creado?.toDate ? a.creado.toDate().toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" }) : ""}</div></div></div>`
     )
@@ -373,7 +373,9 @@ $("#btn-avisos").onclick = () => {
     onAbrir(c, cerrar) {
       c.querySelectorAll("[data-fecha]").forEach((el) =>
         el.addEventListener("click", () => {
-          if (el.dataset.fecha) location.hash = `agenda/${el.dataset.fecha}`;
+          // Cliente que pidió atención: abre su chat de WhatsApp
+          if (el.dataset.tel) window.open(`https://wa.me/${el.dataset.tel}`, "_blank", "noopener");
+          else if (el.dataset.fecha) location.hash = `agenda/${el.dataset.fecha}`;
           cerrar();
         })
       );

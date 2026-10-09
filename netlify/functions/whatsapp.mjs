@@ -93,7 +93,7 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
       phoneNumberId,
       token,
       para: mensaje.from,
-      mensaje: { tipo: "texto", texto: "Por ahora solo puedo leer mensajes de texto ✍️. Escríbeme por ejemplo: _quiero una cita el jueves a las 3_" },
+      mensaje: { tipo: "texto", texto: textoNoSoportado(mensaje.type) },
     });
     return;
   }
@@ -134,4 +134,18 @@ async function atender({ phoneNumberId, mensaje, nombrePerfil }) {
     },
     { merge: true }
   );
+}
+
+// Audios, fotos, stickers...: el bot solo lee texto. Se le dice al
+// cliente qué hacer en vez de dejarlo sin respuesta.
+function textoNoSoportado(tipo) {
+  const que =
+    tipo === "audio"
+      ? "No puedo escuchar audios 🙉"
+      : tipo === "image" || tipo === "video"
+        ? "No puedo ver fotos ni videos 🙈"
+        : tipo === "sticker"
+          ? "😄 ¡Buen sticker! Pero solo leo texto"
+          : "Por ahora solo puedo leer mensajes de texto ✍️";
+  return `${que}. Escríbeme lo que necesitas (por ejemplo: _quiero agendar para el jueves a las 3_) o escribe *menú* para ver las opciones. Si prefieres que te atienda una persona, escribe *asesor*.`;
 }

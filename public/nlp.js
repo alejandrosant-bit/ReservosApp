@@ -28,12 +28,16 @@ const RE_SALUDO = /^(hola|holi|buenas|buenos dias|buenas tardes|buenas noches|he
 const RE_GRACIAS = /\b(gracias|muchas gracias|ok gracias|listo gracias|chao|adios|hasta luego|bendiciones)\b/;
 const RE_SI = /^(si|sii+|sip|claro|dale|ok|okay|listo|confirmo|confirmar|de una|perfecto|correcto|esta bien|va|vale|por favor)\b/;
 const RE_NO = /^(no|nop|nel|negativo|mejor no|todavia no)\b/;
-const RE_MENU = /^(menu|inicio|empezar|volver|reiniciar|opciones)$/;
+// "Menú", "volver", "salir", "olvídalo"... sirven para salirse de cualquier paso.
+const RE_MENU = /^(ir al |volver al |regresar al |al )?(menu( principal)?|inicio|empezar( de nuevo)?|volver|regresar|atras|salir|reiniciar|opciones|olvidalo|dejalo asi|dejemoslo asi|ya no( quiero)?|no importa|nada)( por favor| gracias)?$/;
+// Quiere que lo atienda una persona, no el bot
+const RE_HUMANO = /\b(asesor\w*|humano|operador\w*|recepcionista|persona real|atencion (personalizada|al cliente)|me pueden llamar|llamenme|eres un (bot|robot)|no eres una persona|(hablar|hablo|comunic\w*|contactar) (con|a) (alguien|una persona|el|la|los|un|una|ustedes|usted)|me atienda (alguien|una persona))\b/;
 
 export function detectarIntencion(textoNorm) {
   const t = textoNorm;
   if (RE_CANCELAR.test(t)) return "cancelar";
   if (RE_REAGENDAR.test(t)) return "reagendar";
+  if (RE_HUMANO.test(t)) return "humano";
   if (RE_MIS_CITAS.test(t)) return "miscitas";
   if (RE_TAXI.test(t)) return "taxi";
   if (RE_AGENDAR.test(t)) return "agendar";

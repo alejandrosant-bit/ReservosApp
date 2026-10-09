@@ -431,3 +431,61 @@ test("mis citas: con el mismo número las muestra de una", async () => {
   const r = await opcion(store, "menu:miscitas");
   assert.match(todoTexto(r), /Manicure/);
 });
+
+test("pide hablar con una persona: avisa al negocio una sola vez", async () => {
+  const store = crearStoreMemoria({ config: { ...CONFIG, telefono: "3001234567" }, servicios: SERVICIOS });
+  let r = await enviar(store, "quiero hablar con un asesor");
+  assert.match(todoTexto(r), /ya le avisé/i);
+  assert.match(todoTexto(r), /3001234567/);
+  assert.equal(store.notificaciones.length, 1);
+  assert.equal(store.notificaciones[0].tipo, "humano");
+  assert.equal(store.notificaciones[0].telefono, "573001112233");
+  r = await enviar(store, "necesito hablar con alguien");
+  assert.match(todoTexto(r), /Ya le avisé/);
+  assert.equal(store.notificaciones.length, 1);
+});
+
+test("si no entiende dos veces seguidas, pasa a una persona", async () => {
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+  await enviar(store, "hola");
+  let r = await enviar(store, "xyzzy plugh");
+  assert.equal(store.notificaciones.length, 0);
+  r = await enviar(store, "qwerty asdf");
+  assert.match(todoTexto(r), /no te estoy entendiendo/);
+  assert.equal(store.notificaciones[0].motivo, "no_entendio");
+  // Y el bot sigue funcionando después
+  r = await enviar(store, "quiero una cita");
+  assert.doesNotMatch(todoTexto(r), /no te estoy entendiendo/);
+});
+
+test("un solo 'no entendí' seguido de algo válido no avisa a nadie", async () => {
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+  await enviar(store, "hola");
+  await enviar(store, "xyzzy plugh");
+  await enviar(store, "quiero una cita");
+  await enviar(store, "xyzzy plugh");
+  assert.equal(store.notificaciones.length, 0);
+});
+
+test("escape: 'menú', 'volver' u 'olvídalo' sacan de cualquier paso", async () => {
+  for (const salida of ["menú", "volver al menu", "olvídalo", "ya no quiero", "salir"]) {
+    const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+    await enviar(store, "quiero cancelar");
+    const r = await enviar(store, salida);
+    assert.equal(r.estado.paso, "inicio", salida);
+    assert.equal(r.mensajes.at(-1).tipo, "botones", salida);
+  }
+});
+
+test("escape: en un paso de nombre, 'pedir turno' agenda en vez de buscarse como nombre", async () => {
+  const store = crearStoreMemoria({ config: CONFIG, servicios: SERVICIOS });
+  await opcion(store, "menu:miscitas");
+  let r = await enviar(store, "mejor quiero pedir una cita");
+  assert.doesNotMatch(todoTexto(r), /No encuentro/);
+  assert.equal(r.estado.flujo, "agendar");
+
+  await opcion(store, "menu:cancelar");
+  r = await enviar(store, "mis citas");
+  assert.match(todoTexto(r), /nombre y apellido/);
+  assert.equal(r.estado.paso, "miscitas_nombre");
+});

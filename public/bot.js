@@ -85,6 +85,9 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   }
   estado = estado || { paso: "inicio", datos: {} };
   const datos = estado.datos || {};
+  // Lo que traía la conversación antes de este mensaje (el estado se
+  // reinicia en varios pasos y estos contadores deben sobrevivir).
+  const previo = { fallos: estado.fallos, loDicho: estado.loDicho, humanoTs: estado.humanoTs };
 
   // Respuesta numérica a una lista ("2") → la convertimos en la opción
   if (!opcionId && /^\s*\d{1,2}\s*$/.test(textoEntrada) && estado.opciones?.length && estado.paso !== "pedir_cedula" && estado.paso !== "cancelar_cedula" && estado.paso !== "miscitas_cedula") {
@@ -445,6 +448,28 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
     salida.push(menuPrincipal([prefijo, `${titulo}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
   }
 
+  // ----- Pasar a una persona -----
+  // El cliente lo pide ("quiero hablar con alguien") o el bot no lo
+  // entendió dos veces seguidas: se avisa al negocio (campanita y
+  // notificación) y se le dice al cliente. Un aviso cada 30 min como
+  // máximo por conversación, para no llenar al dueño de alertas.
+  async function pasarAHumano(motivo) {
+    await identificarPorTelefono();
+    const momento = opciones.marcaTiempo || Date.now();
+    const yaAvisado = estado.humanoTs && momento - estado.humanoTs < EXPIRA_MINUTOS * 60000;
+    if (!yaAvisado) {
+      await store.notificar?.({ tipo: "humano", motivo, telefono: tel, nombre: datos.nombre || nombrePerfil || "", texto: String(textoEntrada).slice(0, 140) });
+    }
+    estado = { paso: "inicio", datos: { clienteId: datos.clienteId, nombre: datos.nombre }, humanoTs: yaAvisado ? estado.humanoTs : momento };
+    const contacto = config.telefono ? ` Si es urgente, también puedes llamar al *${config.telefono}*.` : "";
+    const aviso = yaAvisado
+      ? fr("humanoYaAvisado", `Ya le avisé al equipo de *${config.nombre}* 🙌, en cuanto puedan te contactan.${contacto}`)
+      : motivo === "no_entendio"
+        ? fr("humanoNoEntendi", `Creo que no te estoy entendiendo 🙈, así que ya le avisé al equipo de *${config.nombre}* para que te contacte una persona.${contacto}`)
+        : fr("humano", `¡Claro! Ya le avisé al equipo de *${config.nombre}* para que te contacte una persona 🙌.${contacto}`);
+    salida.push(rubro.modo === "viajes" ? texto(aviso) : menuPrincipal(`${aviso}\n\nMientras tanto, por aquí te puedo ayudar con esto 👇`));
+  }
+
   // ----- Mezcla lo que entendimos del texto con lo que ya sabíamos -----
   function absorberDatos() {
     if (a.servicio) {
@@ -672,8 +697,17 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   const esNuevaConversacion = estado.paso === "inicio" && !estado.saludado;
 
   // Intenciones globales que cambian de flujo en cualquier momento
-  if (rubro.modo === "viajes") {
+  const PASOS_DE_NOMBRE = ["pedir_nombre", "cancelar_nombre", "miscitas_nombre"];
+  // En vez de su nombre escribió que quiere agendar ("pedir turno")
+  const pideAgendar = !opcionId && a.intencion !== "menu" && a.intencion !== "cancelar" && ["cancelar_nombre", "miscitas_nombre"].includes(estado.paso) && /\b(agend\w*|reserv\w*|apart\w*|pedir|sacar|quiero|necesito)\b/.test(normalizar(textoEntrada));
+  if (!opcionId && a.intencion === "humano") {
+    await pasarAHumano("lo_pidio");
+  } else if (rubro.modo === "viajes") {
     await flujoViaje();
+  } else if (pideAgendar) {
+    estado.flujo = "agendar";
+    absorberDatos();
+    await empezarAgenda("");
   } else if (!opcionId && a.intencion === "cancelar" && estado.paso !== "cancelar_confirmar") {
     await identificarPorTelefono();
     await empezarCancelacion(esNuevaConversacion ? bienvenida() : "");
@@ -684,7 +718,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
     await empezarAgenda("");
   } else if (opcionId === "menu:cancelar") {
     await empezarCancelacion("");
-  } else if (opcionId === "menu:miscitas" || (!opcionId && a.intencion === "miscitas" && estado.paso === "inicio")) {
+  } else if (opcionId === "menu:miscitas" || (!opcionId && a.intencion === "miscitas" && (estado.paso === "inicio" || PASOS_DE_NOMBRE.includes(estado.paso)))) {
     await mostrarMisCitas(esNuevaConversacion && !opcionId ? bienvenida() : "");
   } else {
     switch (estado.paso) {
@@ -973,6 +1007,20 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
         salida.push(menuPrincipal(bienvenida()));
     }
   }
+
+  // ¿El bot se quedó sin entender? Cuenta si respondió "no te entendí"
+  // o si repitió exactamente lo mismo ante un texto que no reconoció.
+  // A la segunda vez seguida, se pasa a una persona.
+  const loDicho = salida.map((m) => m.texto).join("\n");
+  const noEntendio = !opcionId && a.intencion !== "humano" && (loDicho.includes(msg("noEntendi")) || (!a.intencion && loDicho && loDicho === previo.loDicho));
+  const fallos = noEntendio ? (previo.fallos || 0) + 1 : 0;
+  if (fallos >= 2) {
+    salida.length = 0;
+    await pasarAHumano("no_entendio");
+  }
+  estado.fallos = fallos >= 2 ? 0 : fallos;
+  estado.loDicho = salida.map((m) => m.texto).join("\n").slice(0, 600);
+  if (previo.humanoTs && !estado.humanoTs) estado.humanoTs = previo.humanoTs;
 
   estado.datos = estado.datos === datos || !estado.datos ? datos : estado.datos;
   estado.saludado = true;
