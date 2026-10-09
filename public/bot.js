@@ -87,7 +87,7 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
   const datos = estado.datos || {};
 
   // Respuesta numérica a una lista ("2") → la convertimos en la opción
-  if (!opcionId && /^\s*\d{1,2}\s*$/.test(textoEntrada) && estado.opciones?.length && estado.paso !== "pedir_cedula" && estado.paso !== "cancelar_cedula") {
+  if (!opcionId && /^\s*\d{1,2}\s*$/.test(textoEntrada) && estado.opciones?.length && estado.paso !== "pedir_cedula" && estado.paso !== "cancelar_cedula" && estado.paso !== "miscitas_cedula") {
     const idx = Number(textoEntrada) - 1;
     if (estado.opciones[idx]) opcionId = estado.opciones[idx];
   }
@@ -417,13 +417,32 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
     await identificarPorTelefono();
     const clientes = datos.clienteId ? [datos.clienteId] : [];
     const citas = clientes.length ? await citasFuturasDe(clientes) : [];
+    if (!citas.length) {
+      // Puede que haya agendado desde otro número: antes de decir que
+      // no tiene nada, se busca por nombre.
+      estado.flujo = "miscitas";
+      estado.paso = "miscitas_nombre";
+      salida.push(texto([prefijo, pedirNombreMisCitas()].filter(Boolean).join("\n\n")));
+      return;
+    }
+    listarCitas(citas, prefijo);
+  }
+
+  const pedirNombreMisCitas = () =>
+    fr("pedirNombreMisCitas", `No veo ${V.citas} ${V.proximas} con este número. Si agendaste desde otro, escríbeme el *nombre y apellido* y reviso 🔎`);
+
+  function listarCitas(citas, prefijo, nombre) {
     estado.paso = "inicio";
     if (!citas.length) {
-      salida.push(menuPrincipal([prefijo, fr("sinProximas", `No tienes ${V.citas} ${V.proximas} ${V.registradas} con este número. ¿Quieres agendar ${V.una}?`)].filter(Boolean).join("\n\n")));
+      const aviso = nombre
+        ? `No encuentro ${V.citas} ${V.proximas} a nombre de *${nombre}*. ¿Quieres agendar ${V.una}?`
+        : fr("sinProximas", `No tienes ${V.citas} ${V.proximas} ${V.registradas} con este número. ¿Quieres agendar ${V.una}?`);
+      salida.push(menuPrincipal([prefijo, aviso].filter(Boolean).join("\n\n")));
       return;
     }
     const lineas = citas.map((c) => `• *${fechaLarga(c.fecha)}* a las *${hora12(c.hora)}* — ${c.servicioNombre}`);
-    salida.push(menuPrincipal([prefijo, `Tus ${V.proximas} ${V.citas}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
+    const titulo = nombre ? `${V.citas[0].toUpperCase()}${V.citas.slice(1)} ${V.proximas} de *${nombre}*` : `Tus ${V.proximas} ${V.citas}`;
+    salida.push(menuPrincipal([prefijo, `${titulo}:\n\n${lineas.join("\n")}`].filter(Boolean).join("\n\n")));
   }
 
   // ----- Mezcla lo que entendimos del texto con lo que ya sabíamos -----
@@ -857,6 +876,41 @@ export async function procesarMensaje({ telefono, nombrePerfil, texto: textoEntr
           break;
         }
         await mostrarCitasParaCancelar([cliente.id], cliente.nombre);
+        break;
+      }
+
+      case "miscitas_nombre": {
+        const nombre = textoEntrada.trim();
+        if (normalizar(nombre).length < 3) {
+          salida.push(texto(pedirNombreMisCitas()));
+          break;
+        }
+        const { clientes, verificar } = await buscarClientesParaCancelar(nombre);
+        if (!clientes.length) {
+          listarCitas([], "", nombre);
+          break;
+        }
+        // Nombre registrado con otro número: se confirma la cédula
+        // antes de mostrarle las citas de esa persona.
+        if (verificar && clientes.some((c) => c.cedula)) {
+          datos.clientesConsulta = clientes.map((c) => c.id);
+          estado.paso = "miscitas_cedula";
+          salida.push(texto(`Por seguridad, ¿me confirmas el número de *cédula* de ${clientes[0].nombre}?`));
+          break;
+        }
+        listarCitas(await citasFuturasDe(clientes.map((c) => c.id)), "", clientes[0].nombre);
+        break;
+      }
+
+      case "miscitas_cedula": {
+        const ced = extraerCedula(textoEntrada);
+        const cliente = ced ? await store.buscarClientePorCedula(ced) : null;
+        if (!cliente || !(datos.clientesConsulta || []).includes(cliente.id)) {
+          estado.paso = "inicio";
+          salida.push(menuPrincipal(fr("cedulaNoCoincide", `La cédula no coincide con la de ${V.la} ${V.cita} 🙏. Si necesitas ayuda comunícate directamente con el negocio.`)));
+          break;
+        }
+        listarCitas(await citasFuturasDe([cliente.id]), "", cliente.nombre);
         break;
       }
 

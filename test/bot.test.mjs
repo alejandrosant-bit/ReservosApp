@@ -381,3 +381,53 @@ test("taxi: no deja cancelar por chat si el conductor ya va en camino", async ()
   assert.match(todoTexto(r), /ya va en camino/);
   assert.equal(store.db.citas[0].estado, "confirmada");
 });
+
+test("mis citas: si el número no tiene nada, pide el nombre y busca por él", async () => {
+  const store = crearStoreMemoria({
+    config: { ...CONFIG, pedirCedula: false },
+    servicios: SERVICIOS,
+    clientes: [{ id: "c1", nombre: "Ana Gómez", telefono: "573009999999" }],
+    citas: [{ id: "k1", clienteId: "c1", servicioNombre: "Manicure", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "pendiente" }],
+  });
+  let r = await opcion(store, "menu:miscitas");
+  assert.match(todoTexto(r), /nombre y apellido/);
+  r = await enviar(store, "ana gomez");
+  assert.match(todoTexto(r), /Manicure/);
+  assert.match(todoTexto(r), /Ana Gómez/);
+
+  // Nombre que no existe: avisa y ofrece agendar
+  await opcion(store, "menu:miscitas");
+  r = await enviar(store, "Pedro Pérez");
+  assert.match(todoTexto(r), /No encuentro/);
+});
+
+test("mis citas desde otro número exige cédula", async () => {
+  const store = crearStoreMemoria({
+    config: CONFIG,
+    servicios: SERVICIOS,
+    clientes: [{ id: "c1", nombre: "Ana Gómez", cedula: "555666", telefono: "573009999999" }],
+    citas: [{ id: "k1", clienteId: "c1", servicioNombre: "Manicure", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "pendiente" }],
+  });
+  await opcion(store, "menu:miscitas");
+  let r = await enviar(store, "Ana Gómez");
+  assert.match(todoTexto(r), /cédula/);
+  r = await enviar(store, "111222");
+  assert.match(todoTexto(r), /no coincide/);
+  assert.doesNotMatch(todoTexto(r), /Manicure/);
+
+  await opcion(store, "menu:miscitas");
+  await enviar(store, "Ana Gómez");
+  r = await enviar(store, "555666");
+  assert.match(todoTexto(r), /Manicure/);
+});
+
+test("mis citas: con el mismo número las muestra de una", async () => {
+  const store = crearStoreMemoria({
+    config: CONFIG,
+    servicios: SERVICIOS,
+    clientes: [{ id: "c1", nombre: "Ana Gómez", cedula: "555", telefono: "573001112233" }],
+    citas: [{ id: "k1", clienteId: "c1", servicioNombre: "Manicure", fecha: "2026-10-08", hora: "15:00", duracion: 60, estado: "pendiente" }],
+  });
+  const r = await opcion(store, "menu:miscitas");
+  assert.match(todoTexto(r), /Manicure/);
+});
