@@ -75,6 +75,7 @@ deben mezclar.
 - Prueba de punta a punta: `node test/e2e/chats.e2e.mjs`.
 
 ## Decisiones tomadas
+- Nuvex se registrará como empresa en **Venezuela**; Reservo se ofrece en Venezuela y Colombia. Política de privacidad en `/privacidad/`.
 - Página de ventas en lenguaje sencillo, sin temas técnicos (nada de "bot", API ni cómo entiende los mensajes):
   problema → beneficios → 3 pasos → precio. No inventar testimonios ni cifras de clientes.
 - Página de ventas: dos planes, **Reservo US$30** (hasta 30 citas al día) y **Reservo Pro US$45** (negocios grandes).
