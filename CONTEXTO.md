@@ -75,6 +75,8 @@ deben mezclar.
 - Prueba de punta a punta: `node test/e2e/chats.e2e.mjs`.
 
 ## Decisiones tomadas
+- Página de ventas en lenguaje sencillo, sin temas técnicos (nada de "bot", API ni cómo entiende los mensajes):
+  problema → beneficios → 3 pasos → precio. No inventar testimonios ni cifras de clientes.
 - Página de ventas: dos planes, **Reservo US$30** (hasta 30 citas al día) y **Reservo Pro US$45** (negocios grandes).
   No se menciona el cobro de mensajes de Meta. Firma "hecho por Nuvex". Se destacan las citas médicas, no los taxis.
   El panel maneja el plan por negocio (`cuentas/{uid}.plan`) y avisa cuando uno en el plan base supera 30 citas en un día.
