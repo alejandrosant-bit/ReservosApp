@@ -73,6 +73,16 @@ export function sumarDias(fechaISO, dias) {
 }
 
 // Suma meses a una fecha "YYYY-MM-DD" (31 ene + 1 mes = 28/29 feb)
+// Planes de la membresía. "base" alcanza hasta citasDia citas al
+// día; los negocios más grandes van en "pro".
+export const PLANES = {
+  base: { id: "base", nombre: "Reservo", precio: 30, citasDia: 30 },
+  pro: { id: "pro", nombre: "Reservo Pro", precio: 45, citasDia: Infinity },
+};
+export const planDe = (id) => PLANES[id] || PLANES.base;
+// ¿Le queda chico su plan? (su día más lleno supera el tope)
+export const superaPlan = (planId, maxCitasDia) => Number(maxCitasDia) > planDe(planId).citasDia;
+
 export function sumarMeses(fechaISO, n = 1) {
   const [a, m, d] = fechaISO.split("-").map(Number);
   const destino = new Date(Date.UTC(a, m - 1 + n, 1));

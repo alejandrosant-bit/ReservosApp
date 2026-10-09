@@ -7,13 +7,14 @@
 import { getAuth } from "firebase-admin/auth";
 import { firebase } from "./lib/firebase.mjs";
 import { esAdmin } from "./lib/admin.mjs";
-import { ahoraEnZona, inicioMes } from "../../public/core.js";
+import { ahoraEnZona, inicioMes, sumarDias, PLANES } from "../../public/core.js";
 
 export const config = { path: "/api/admin" };
 
 const json = (cuerpo, status = 200) => new Response(JSON.stringify(cuerpo), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 const correoValido = (c) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c);
 const fechaValida = (f) => /^\d{4}-\d{2}-\d{2}$/.test(f);
+const planValido = (p) => (PLANES[p] ? p : "base");
 
 const MENSAJES_AUTH = {
   "auth/email-already-exists": "Ya existe una cuenta con ese correo.",
@@ -58,6 +59,10 @@ export default async (req) => {
       case "listar": {
         const hoy = ahoraEnZona("America/Bogota").fecha;
         const desdeMes = inicioMes(hoy);
+        // Para saber si un negocio ya necesita el plan Pro se mira su día
+        // más lleno: del último mes y lo que ya tiene agendado adelante.
+        const desdePico = sumarDias(hoy, -30);
+        const hastaPico = sumarDias(hoy, 30);
         const usuarios = [];
         let pagina;
         do {
@@ -71,13 +76,20 @@ export default async (req) => {
             .filter((u) => !esAdmin({ email: u.email }))
             .map(async (u) => {
               const raiz = db.doc(`negocios/${u.uid}`);
-              const [cfg, cuenta, citasMes, clientes, ultimaCita] = await Promise.all([
+              const [cfg, cuenta, citasMes, clientes, ultimaCita, citasPico] = await Promise.all([
                 raiz.get(),
                 cuentas.doc(u.uid).get(),
                 raiz.collection("citas").where("fecha", ">=", desdeMes).count().get(),
                 raiz.collection("clientes").count().get(),
                 raiz.collection("citas").orderBy("creadoMs", "desc").limit(1).get(),
+                raiz.collection("citas").where("fecha", ">=", desdePico).where("fecha", "<=", hastaPico).select("fecha", "estado").get(),
               ]);
+              const porDia = {};
+              citasPico.docs.forEach((d) => {
+                const x = d.data();
+                if (x.estado !== "cancelada") porDia[x.fecha] = (porDia[x.fecha] || 0) + 1;
+              });
+              const maxCitasDia = Math.max(0, ...Object.values(porDia));
               const c = cfg.data() || {};
               const m = cuenta.data() || {};
               return {
@@ -94,6 +106,8 @@ export default async (req) => {
                 citasMes: citasMes.data().count,
                 clientes: clientes.data().count,
                 ultimaActividad: ultimaCita.docs[0]?.data().creadoMs || null,
+                plan: planValido(m.plan),
+                maxCitasDia,
                 proximoPago: m.proximoPago || "",
                 pagos: (m.pagos || []).slice(-6),
                 nota: m.nota || "",
@@ -123,6 +137,7 @@ export default async (req) => {
           rubro,
           creadoMs: Date.now(),
           creadoPor: quien.email,
+          plan: planValido(pedido.plan),
           proximoPago: fechaValida(pedido.proximoPago) ? pedido.proximoPago : hoy,
           pagos: [],
           nota: "",
@@ -157,11 +172,13 @@ export default async (req) => {
         return json({ ok: true });
       }
 
-      // ---------- Nota interna sobre el negocio ----------
+      // ---------- Nota interna, teléfono y plan del negocio ----------
       case "nota": {
         const uid = String(pedido.uid || "");
         await auth.getUser(uid);
-        await cuentas.doc(uid).set({ nota: String(pedido.nota || "").slice(0, 500), telefono: String(pedido.telefono || "").replace(/[^\d]/g, "").slice(0, 15) }, { merge: true });
+        const cambios = { nota: String(pedido.nota || "").slice(0, 500), telefono: String(pedido.telefono || "").replace(/[^\d]/g, "").slice(0, 15) };
+        if (pedido.plan !== undefined) cambios.plan = planValido(pedido.plan);
+        await cuentas.doc(uid).set(cambios, { merge: true });
         return json({ ok: true });
       }
 

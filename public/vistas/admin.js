@@ -1,13 +1,17 @@
 // ============================================================
 // Panel Reservo — solo para el equipo de Reservo (correoAdmin).
 // Dar de alta negocios, ver cómo van, entrar a configurarlos y
-// llevar la membresía de US$30 al mes.
+// llevar la membresía (Reservo US$30 o Reservo Pro US$45 al mes).
 // ============================================================
 import { llamarAdmin, sesion } from "../datos.js";
 import { $, $$, esc, toast, abrirModal, confirmar, datosForm } from "../ui.js";
-import { RUBROS, ORDEN_RUBROS, ahoraEnZona, diferenciaDias, fechaCorta, sumarMeses } from "../core.js";
+import { RUBROS, ORDEN_RUBROS, ahoraEnZona, diferenciaDias, fechaCorta, sumarMeses, PLANES, planDe, superaPlan } from "../core.js";
 
-export const PRECIO_MEMBRESIA = 30;
+export const PRECIO_MEMBRESIA = PLANES.base.precio;
+const opcionesPlan = (actual = "base") =>
+  Object.values(PLANES)
+    .map((p) => `<option value="${p.id}" ${p.id === actual ? "selected" : ""}>${esc(p.nombre)} · US$${p.precio}${Number.isFinite(p.citasDia) ? ` (hasta ${p.citasDia} citas al día)` : " (negocios grandes)"}</option>`)
+    .join("");
 
 let estado = { negocios: [], hoy: "", buscar: "", cargando: false, error: "" };
 let raiz = null;
@@ -59,7 +63,7 @@ export function montarPanel(contenedor, { usuario, entrar }) {
     </header>
     <main class="contenedor-panel panel-cuerpo">
       <div class="cab-vista">
-        <div><h2>Negocios</h2><p class="peq suave">Da de alta, revisa y configura cada negocio. Membresía: US$${PRECIO_MEMBRESIA} al mes.</p></div>
+        <div><h2>Negocios</h2><p class="peq suave">Da de alta, revisa y configura cada negocio. Membresía: ${Object.values(PLANES).map((p) => `${p.nombre} US$${p.precio}`).join(" · ")} al mes.</p></div>
         <button type="button" class="btn btn-pri" id="panel-nuevo">+ Nuevo negocio</button>
       </div>
       <div class="kpis" id="panel-kpis"></div>
@@ -109,7 +113,7 @@ function pintarKpis() {
   const citas = ns.reduce((t, n) => t + (n.citasMes || 0), 0);
   el.innerHTML = [
     [activos.length, "Negocios activos"],
-    [`US$${(activos.length * PRECIO_MEMBRESIA).toLocaleString("es-CO")}`, "Ingreso mensual"],
+    [`US$${activos.reduce((t, n) => t + planDe(n.plan).precio, 0).toLocaleString("es-CO")}`, "Ingreso mensual"],
     [vencidos.length, "Pagos vencidos"],
     [citas.toLocaleString("es-CO"), "Citas este mes (todos)"],
   ]
@@ -160,11 +164,14 @@ function tarjeta(n) {
     <div class="fila-wrap">
       <span class="chip ${n.activo ? "chip-completada" : "chip-cancelada"}">${n.activo ? "Activo" : "Pausado"}</span>
       <span class="chip ${m.clase}">${esc(m.texto)}</span>
+      <span class="chip ${n.plan === "pro" ? "chip-confirmada" : ""}">${esc(planDe(n.plan).nombre)} · US$${planDe(n.plan).precio}</span>
+      ${superaPlan(n.plan, n.maxCitasDia) ? `<span class="chip chip-no_asistio" title="Su día más lleno tuvo ${n.maxCitasDia} citas">⚠️ ${n.maxCitasDia} citas en un día · pasar a Pro</span>` : ""}
       ${n.configurado ? "" : '<span class="chip chip-pendiente">Falta configurar</span>'}
       ${n.whatsappConectado ? '<span class="chip chip-wa">WhatsApp</span>' : ""}
     </div>
     <div class="panel-datos">
       <div><b>${n.citasMes}</b><span>citas este mes</span></div>
+      <div><b>${n.maxCitasDia || 0}</b><span>citas en su día más lleno</span></div>
       <div><b>${n.clientes}</b><span>clientes</span></div>
       <div><b>${esc(hace(n.ultimoIngreso))}</b><span>último ingreso</span></div>
       <div><b>${esc(hace(n.ultimaActividad))}</b><span>última cita creada</span></div>
@@ -193,7 +200,8 @@ function nuevoNegocio() {
       </div>
       <label>WhatsApp del dueño (opcional)<input name="telefono" inputmode="tel" placeholder="3001234567" />
         <span class="ayuda">Para enviarle sus datos de entrada con un toque.</span></label>
-      <label class="check"><input type="checkbox" name="pago" checked /> Ya pagó el primer mes (US$${PRECIO_MEMBRESIA})</label>
+      <label>Plan<select name="plan">${opcionesPlan()}</select></label>
+      <label class="check"><input type="checkbox" name="pago" checked /> Ya pagó el primer mes</label>
       <p class="error" id="err"></p>
       <button class="btn btn-pri btn-bloque" id="crear">Crear negocio</button>
     </form>`,
@@ -214,9 +222,10 @@ function nuevoNegocio() {
             clave: d.clave,
             rubro: d.rubro,
             telefono: d.telefono,
+            plan: d.plan,
             proximoPago: pago ? sumarMeses(hoy) : hoy,
           });
-          if (pago) await llamarAdmin("pago", { uid: r.uid, monto: PRECIO_MEMBRESIA, moneda: "USD", proximoPago: sumarMeses(hoy) }).catch(() => {});
+          if (pago) await llamarAdmin("pago", { uid: r.uid, monto: planDe(d.plan).precio, moneda: "USD", proximoPago: sumarMeses(hoy) }).catch(() => {});
           cerrar();
           toast("Negocio creado ✅");
           await cargar();
@@ -278,7 +287,7 @@ function registrarPago(n) {
     titulo: `Pago · ${n.nombre || n.correo}`,
     html: `<form id="f">
       <div class="dos-col">
-        <label>Monto<input name="monto" inputmode="decimal" value="${PRECIO_MEMBRESIA}" /></label>
+        <label>Monto (${esc(planDe(n.plan).nombre)})<input name="monto" inputmode="decimal" value="${planDe(n.plan).precio}" /></label>
         <label>Moneda<select name="moneda"><option>USD</option><option>COP</option><option>VES</option></select></label>
       </div>
       <label>Próximo cobro<input type="date" name="proximoPago" required value="${sumarMeses(base)}" />
@@ -330,6 +339,8 @@ function detalles(n) {
     html: `<form id="f">
       <p class="peq suave">Alta: ${n.creado ? esc(new Date(n.creado).toLocaleDateString("es-CO", { dateStyle: "medium" })) : "—"} · ${esc(n.correo)}</p>
       <label>WhatsApp del dueño<input name="telefono" inputmode="tel" value="${esc(n.telefono || "")}" /></label>
+      <label>Plan<select name="plan">${opcionesPlan(n.plan)}</select>
+        <span class="ayuda">Su día más lleno (último mes y próximos 30 días): ${n.maxCitasDia || 0} citas.${superaPlan(n.plan, n.maxCitasDia) ? " Ya supera el plan Reservo: conviene pasarlo a Pro." : ""}</span></label>
       <label>Nota interna<textarea name="nota" maxlength="500" placeholder="Ej. paga por Nequi el 5 de cada mes">${esc(n.nota || "")}</textarea></label>
       <p class="error" id="err"></p>
       <button class="btn btn-pri btn-bloque">Guardar</button>
@@ -351,7 +362,7 @@ function detalles(n) {
         ev.preventDefault();
         const d = datosForm(ev.target);
         try {
-          await llamarAdmin("nota", { uid: n.uid, nota: d.nota, telefono: d.telefono });
+          await llamarAdmin("nota", { uid: n.uid, nota: d.nota, telefono: d.telefono, plan: d.plan });
           cerrar();
           toast("Guardado ✅");
           cargar();

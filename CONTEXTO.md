@@ -28,7 +28,7 @@ deben mezclar.
 ## Cómo está hecho
 - **Sin compilación**: JavaScript moderno (módulos ES) en `public/`. Firebase 10.14.1 desde el CDN de gstatic.
 - **Funciona sin internet**: Firestore con caché persistente + service worker (`public/sw.js`).
-  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v21`)
+  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v22`)
   y agregar archivos nuevos a la lista `ARCHIVOS`.
 - **Servidor**: Netlify Functions en `netlify/functions/` (usan `firebase-admin`):
   - `whatsapp.mjs` → `/api/whatsapp`: webhook de WhatsApp Cloud API (Meta), firma HMAC.
@@ -77,7 +77,7 @@ deben mezclar.
 ## Decisiones tomadas
 - Página de ventas: dos planes, **Reservo US$30** (hasta 30 citas al día) y **Reservo Pro US$45** (negocios grandes).
   No se menciona el cobro de mensajes de Meta. Firma "hecho por Nuvex". Se destacan las citas médicas, no los taxis.
-  (El panel de administrador todavía maneja una sola membresía de US$30.)
+  El panel maneja el plan por negocio (`cuentas/{uid}.plan`) y avisa cuando uno en el plan base supera 30 citas en un día.
 - Nombre **Reservo**. Marca café pastel (Cacao #5B4033, Caramelo #B9875E, Crema #F3E7DA) con
   letra Comfortaa en el logo. Sello "hecho con reservo" en la app.
 - **Diseño tecnológico oscuro** (ámbar #E3A66E + cian #5EE7D4, Space Grotesk / Inter / JetBrains Mono)

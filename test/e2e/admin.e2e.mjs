@@ -30,7 +30,8 @@ const URL_BASE = `http://localhost:${server.address().port}/`;
 // /api/admin simulada en memoria
 const hoy = new Date().toISOString().slice(0, 10);
 const cuentas = [
-  { uid: "neg-viejo", correo: "barber@clasico.com", activo: true, creado: Date.now() - 864e6, ultimoIngreso: Date.now() - 36e5, configurado: true, nombre: "Barbería El Clásico", rubro: "barberia", telefono: "", whatsappConectado: true, citasMes: 42, clientes: 87, ultimaActividad: Date.now() - 6e5, proximoPago: "2020-01-01", pagos: [], nota: "" },
+  { uid: "neg-viejo", correo: "barber@clasico.com", activo: true, creado: Date.now() - 864e6, ultimoIngreso: Date.now() - 36e5, configurado: true, nombre: "Barbería El Clásico", rubro: "barberia", telefono: "", whatsappConectado: true, citasMes: 42, clientes: 87, ultimaActividad: Date.now() - 6e5, proximoPago: "2020-01-01", pagos: [], nota: "", plan: "base", maxCitasDia: 38 },
+  { uid: "neg-grande", correo: "info@clinica.com", activo: true, creado: Date.now() - 964e6, ultimoIngreso: Date.now() - 36e5, configurado: true, nombre: "Clínica Central", rubro: "consultorio", telefono: "", whatsappConectado: true, citasMes: 900, clientes: 400, ultimaActividad: Date.now() - 6e5, proximoPago: "2099-01-01", pagos: [], nota: "", plan: "pro", maxCitasDia: 55 },
 ];
 const llamadas = [];
 function api(pedido) {
@@ -38,7 +39,7 @@ function api(pedido) {
   if (pedido.accion === "listar") return { negocios: cuentas, hoy };
   if (pedido.accion === "crear") {
     const uid = "neg-" + cuentas.length;
-    cuentas.unshift({ uid, correo: pedido.correo, activo: true, creado: Date.now(), ultimoIngreso: null, configurado: false, nombre: pedido.nombre, rubro: pedido.rubro, telefono: pedido.telefono, whatsappConectado: false, citasMes: 0, clientes: 0, ultimaActividad: null, proximoPago: pedido.proximoPago, pagos: [], nota: "" });
+    cuentas.unshift({ uid, correo: pedido.correo, activo: true, creado: Date.now(), ultimoIngreso: null, configurado: false, nombre: pedido.nombre, rubro: pedido.rubro, telefono: pedido.telefono, whatsappConectado: false, citasMes: 0, clientes: 0, ultimaActividad: null, proximoPago: pedido.proximoPago, pagos: [], nota: "", plan: pedido.plan || "base", maxCitasDia: 0 });
     return { ok: true, uid };
   }
   const n = cuentas.find((c) => c.uid === pedido.uid);
@@ -80,7 +81,9 @@ try {
   ok(true, "el correo del equipo abre el Panel Reservo");
   ok((await page.textContent("#panel-lista")).includes("Barbería El Clásico"), "lista los negocios existentes");
   ok((await page.textContent("#panel-lista")).includes("Vencida"), "marca la membresía vencida");
-  ok((await page.textContent("#panel-kpis")).includes("US$30"), "calcula el ingreso mensual");
+  ok((await page.textContent("#panel-kpis")).includes("US$75"), "ingreso mensual suma cada plan (30 + 45)");
+  ok((await page.textContent("#panel-lista")).includes("Reservo Pro · US$45"), "muestra el plan de cada negocio");
+  ok((await page.textContent("#panel-lista")).split("pasar a Pro").length === 2, "avisa solo al negocio del plan base que pasa de 30 citas al día");
   await foto("panel");
 
   // Alta de un negocio
@@ -93,6 +96,7 @@ try {
   await page.waitForSelector("text=¡Negocio creado!");
   ok(llamadas.some((l) => l.accion === "crear" && l.correo === "dra@ruiz.com" && l.clave.length >= 6), "crea la cuenta con correo y clave");
   ok(llamadas.some((l) => l.accion === "pago" && l.monto === 30), "registra el primer mes pagado");
+  ok(llamadas.some((l) => l.accion === "crear" && l.plan === "base"), "el negocio nuevo queda en el plan Reservo");
   const wa = await page.getAttribute('a:has-text("Enviar por WhatsApp")', "href");
   ok(wa.startsWith("https://wa.me/573001234567?text="), "enlace para enviarle los datos por WhatsApp");
   await foto("creado");
