@@ -24,6 +24,6 @@ export const vapidKey = "";
 export const permitirRegistro = true;
 
 // Estilo de la pantalla de entrada para este despliegue:
-// "belleza" (spa, uñas, peluquería) o "barberia". Cada negocio igual
-// puede cambiarlo después en Ajustes → Mi negocio.
-export const estiloPorDefecto = "belleza";
+// "tecno" (oscuro, el de la página de Reservo), "belleza" o "barberia".
+// Cada negocio igual puede cambiarlo después en Ajustes → Mi negocio.
+export const estiloPorDefecto = "tecno";

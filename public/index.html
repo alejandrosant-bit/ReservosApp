@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&family=Oswald:wght@500;600&family=Barlow:wght@400;600;700;800&family=Comfortaa:wght@600;700&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&family=Oswald:wght@500;600&family=Barlow:wght@400;600;700;800&family=Comfortaa:wght@600;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" />
 <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -45,12 +45,14 @@
 
 <!-- ===================== LOGIN ===================== -->
 <div id="vista-login" class="login oculto">
+  <canvas class="login-red" aria-hidden="true"></canvas>
   <section class="login-marca" aria-label="Reservo">
     <div class="reservo-logo">
       <svg class="reservo-iso" aria-hidden="true"><use href="#iso-reservo"/></svg>
       <span class="reservo-palabra">reservo</span><span class="reservo-sello" id="reservo-sello"></span>
     </div>
-    <h1 class="login-lema">Tu agenda, tus clientes y tu caja, en un solo lugar.</h1>
+    <span class="login-etiqueta"><i></i>Bot en línea · 24/7</span>
+    <h1 class="login-lema">Tu agenda, tus clientes y tu caja, en <em>piloto automático</em>.</h1>
     <ul class="login-puntos">
       <li><span aria-hidden="true">💬</span> El bot de WhatsApp agenda por ti, día y noche</li>
       <li><span aria-hidden="true">💵</span> Caja con arqueo en pesos, dólares o bolívares</li>
@@ -59,6 +61,7 @@
   </section>
 
   <section class="login-panel">
+    <div class="login-marco">
     <div class="tarjeta-login">
       <div class="login-negocio oculto" id="login-negocio">
         <img src="./icon-192.png" alt="" class="logo-login" id="login-logo" />
@@ -91,7 +94,8 @@
       </div>
       <p class="nota">La primera vez necesitas internet. Después la sesión queda guardada y la app funciona sin conexión.</p>
     </div>
-    <p class="login-pie">hecho con ☕ por <b>reservo</b></p>
+    </div>
+    <p class="login-pie">// hecho con ☕ por <b>reservo</b></p>
   </section>
 </div>
 

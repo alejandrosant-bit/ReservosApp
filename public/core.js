@@ -375,6 +375,17 @@ export const ESTILOS = {
     tituloCliente: null,
     bienvenida: (n) => (n ? `Bienvenido(a), ${n}` : "Bienvenido(a)"),
   },
+  tecno: {
+    nombre: "Tecnológico (oscuro)",
+    color: "#e3a66e",
+    iconoServicio: "⚡",
+    lluviaPago: ["💸", "⚡", "✨", "🪙", "💰"],
+    lluviaCliente: ["✨", "⚡", "💬", "⭐", "🚀"],
+    iconoCliente: "🚀",
+    tituloPago: "¡Pago recibido!",
+    tituloCliente: null,
+    bienvenida: (n) => (n ? `Bienvenido(a), ${n}` : "Bienvenido(a)"),
+  },
   taxi: {
     nombre: "Taxis (amarillo)",
     color: "#1f2937",

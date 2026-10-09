@@ -5,7 +5,8 @@ import { configurado, sesion, E, alCambiar, iniciarDatos, detenerDatos, sync, ac
 import * as cfgFirebase from "./firebase-config.js";
 import { $, $$, esc, toast, sonar, abrirModal, celebrar, aplicarFondo } from "./ui.js";
 import { prepararPush } from "./notificaciones.js";
-import { hora12, formatoMoneda, estiloDe, vocabularioDe } from "./core.js";
+import { hora12, formatoMoneda, estiloDe, vocabularioDe, tintaParaFondo } from "./core.js";
+import { iniciarRed } from "./red.js";
 
 const VISTAS = {
   agenda: () => import("./vistas/agenda.js"),
@@ -234,7 +235,7 @@ const ICONOS_ESTILO = {
   barberia: ["./icon-barber-192.png", "./manifest-barber.json"],
 };
 function aplicarEstilo(estilo) {
-  const valido = ["belleza", "barberia", "salud", "general", "taxi"].includes(estilo) ? estilo : "belleza";
+  const valido = ["belleza", "barberia", "salud", "general", "taxi", "tecno"].includes(estilo) ? estilo : "belleza";
   const barberia = valido === "barberia";
   document.documentElement.dataset.estilo = valido;
   // Ícono e instalación con la identidad de cada estilo (los demás
@@ -257,8 +258,10 @@ function aplicarMarca() {
   const c = E.config;
   aplicarEstilo(E.configExiste ? c.estilo : ESTILO_DESPLIEGUE);
   document.documentElement.style.setProperty("--pri", c.colorPrimario || "#c2185b");
+  // Letra legible encima del color principal (botones del estilo tecnológico)
+  document.documentElement.style.setProperty("--pri-tinta", tintaParaFondo(c.colorPrimario, { oscura: "#1a110b", clara: "#ffffff" })?.tinta || "#ffffff");
   aplicarFondo(c.colorFondo);
-  $('meta[name="theme-color"]').setAttribute("content", c.colorPrimario || "#c2185b");
+  $('meta[name="theme-color"]').setAttribute("content", c.estilo === "tecno" ? c.colorFondo || "#0b0908" : c.colorPrimario || "#c2185b");
   $$("[data-nombre-negocio]").forEach((el) => (el.textContent = c.nombre || "Reservo"));
   $$("[data-logo]").forEach((el) => (el.src = c.logo || (ICONOS_ESTILO[document.documentElement.dataset.estilo] || ["./icon-reservo-192.png"])[0]));
   const V = vocabularioDe(c);
@@ -396,6 +399,7 @@ if (!configurado) {
       vistaActual = null;
       nombreVista = null;
       mostrar("vista-login");
+      iniciarRed($(".login-red"));
     }
   });
 }

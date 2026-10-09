@@ -76,6 +76,16 @@ son idénticas.
 | Bot | "Bienvenid@ a *Spa Luna*. Soy Sofi…" — "cita" | "¡Qué más! 💈 Bienvenido a *El Clásico*. Soy Max…" — "turno" |
 | Celebraciones | "¡Pago recibido!" 💖 / "¡Nuevo cliente!" 🌸 | "¡Billete a la caja!" 💵 / "¡Cliente nuevo en la silla!" 💈 |
 
+### ⚡ Diseño tecnológico (por defecto)
+
+El mismo look de la página web de Reservo: fondo oscuro con cuadrícula,
+brillo ámbar y cian, botones con destello, barra con una línea de luz y
+tarjetas que se encienden. La pantalla de entrada siempre lo usa (con la
+red de partículas animada) y el asistente inicial lo deja marcado para
+cualquier tipo de negocio. Quien prefiera el estilo propio de su negocio
+(spa rosado, barbería, salud, taxis…) lo desmarca al empezar o lo cambia
+en **Ajustes → Mi negocio → Estilo visual**.
+
 - Al crear el negocio, elegir **Barbería** activa ese estilo con servicios de barbería de ejemplo.
 - Se puede cambiar en **Ajustes → Mi negocio → Estilo de la app** (el bot adopta el tono nuevo).
 - En **Ajustes → Mi negocio → Color de fondo** cada negocio elige su fondo (10 sugeridos o cualquier color). Si es oscuro, las letras encima se aclaran solas para que siempre se lean.

@@ -60,6 +60,7 @@ try {
   await page.goto(URL_BASE);
   await page.waitForSelector("text=Configuremos tu negocio");
   await page.check('input[name="rubro"][value="taxi"]', { force: true });
+  await page.uncheck("#tecno-ini"); // estilo propio de taxis (amarillo)
   await page.fill('input[name="nombre"]', "Taxis Express");
   await foto("asistente");
   await page.click("text=Empezar");

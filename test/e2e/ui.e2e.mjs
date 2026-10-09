@@ -66,8 +66,13 @@ try {
   const RUBRO = process.env.RUBRO || (process.env.ESTILO === "barberia" ? "barberia" : "spa");
   const BARBERIA = RUBRO === "barberia";
   await page.check(`input[name="rubro"][value="${RUBRO}"]`, { force: true });
+  // La corrida por defecto usa el diseño tecnológico; con RUBRO/ESTILO se
+  // prueba el estilo propio de cada tipo de negocio.
+  const TECNO = !process.env.RUBRO && !process.env.ESTILO;
+  if (!TECNO) await page.uncheck("#tecno-ini");
   await page.click("text=Empezar");
   await page.waitForTimeout(300);
+  if (TECNO) ok((await page.evaluate(() => document.documentElement.dataset.estilo)) === "tecno", "diseño tecnológico aplicado");
   ok((await page.textContent("[data-nombre-negocio]")).includes("Spa Luna"), "nombre del negocio aplicado");
   const nServ = await page.evaluate(() => window.__agenda.E.servicios.length);
   const esperados = { spa: 5, barberia: 7, consultorio: 5, odontologia: 5, gimnasio: 4, veterinaria: 4 }[RUBRO];

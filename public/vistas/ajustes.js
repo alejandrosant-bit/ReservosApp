@@ -219,7 +219,8 @@ function seccionNegocio() {
           cambios.mensajes = { ...nuevo.mensajes };
           if (c.asistente === rubroAnterior.asistente) cambios.asistente = nuevo.asistente;
           // Si no tocó el estilo, también pasa al estilo del nuevo tipo
-          if (d.estilo === estiloAnterior) cambios.estilo = nuevo.estilo;
+          // (el tecnológico se conserva: sirve para cualquier negocio)
+          if (d.estilo === estiloAnterior && estiloAnterior !== "tecno") cambios.estilo = nuevo.estilo;
           if (nuevo.modo === "viajes") Object.assign(cambios, { pedirCedula: false, horasMinCancelacion: 0 });
         }
         const estiloFinal = cambios.estilo || d.estilo;
@@ -831,6 +832,7 @@ export function asistenteInicial() {
           ).join("")}
         </div>
       </fieldset>
+      <label class="check"><input type="checkbox" name="tecno" id="tecno-ini" checked /> Diseño tecnológico oscuro (como la página de Reservo)</label>
       <label>Nombre del negocio<input name="nombre" required id="nombre-ini" placeholder="Ej. Spa Luna" /></label>
       <div class="dos-col">
         <label>País<select name="pais">${Object.entries(PAISES).map(([k, p]) => `<option value="${k}">${p.nombre}</option>`).join("")}</select></label>
@@ -844,26 +846,28 @@ export function asistenteInicial() {
       const ejemplosNombre = { spa: "Spa Luna", barberia: "Barbería El Clásico", consultorio: "Consultorio Dra. Ruiz", odontologia: "Sonrisa Dental", taxi: "Taxis Express", veterinaria: "Veterinaria Huellitas", gimnasio: "Studio Fit", lavadero: "Lavadero El Brillo" };
       const vistaPrevia = () => {
         const r = RUBROS[f0.rubro.value];
-        document.documentElement.dataset.estilo = r.estilo;
-        document.documentElement.style.setProperty("--pri", ESTILOS[r.estilo].color);
+        const estilo = f0.tecno.checked ? "tecno" : r.estilo;
+        document.documentElement.dataset.estilo = estilo;
+        document.documentElement.style.setProperty("--pri", ESTILOS[estilo].color);
         const asis = cu.querySelector("#asis-ini");
         if (Object.values(RUBROS).some((x) => x.asistente === asis.value)) asis.value = r.asistente;
         cu.querySelector("#nombre-ini").placeholder = "Ej. " + (ejemplosNombre[f0.rubro.value] || "Mi negocio");
       };
-      cu.querySelectorAll('input[name="rubro"]').forEach((i) => i.addEventListener("change", vistaPrevia));
+      cu.querySelectorAll('input[name="rubro"], #tecno-ini').forEach((i) => i.addEventListener("change", vistaPrevia));
       vistaPrevia();
       f0.onsubmit = (ev) => {
         ev.preventDefault();
         const d = datosForm(ev.target);
         const p = PAISES[d.pais];
         const r = rubroDe({ rubro: d.rubro });
+        const estilo = d.tecno ? "tecno" : r.estilo;
         guardarConfig({
           nombre: d.nombre.trim(),
           rubro: r.id,
           tipoNegocio: r.id,
-          estilo: r.estilo,
+          estilo,
           asistente: d.asistente.trim() || r.asistente,
-          colorPrimario: ESTILOS[r.estilo].color,
+          colorPrimario: ESTILOS[estilo].color,
           mensajes: { ...r.mensajes },
           ...(r.modo === "viajes" ? { pedirCedula: false, horasMinCancelacion: 0 } : {}),
           pais: d.pais,
