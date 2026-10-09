@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64.0 64.0" role="img" aria-label="Reservo"><title>Reservo</title><path d="M18 2H46Q62 2 62 18V46Q62 62 46 62H18Q2 62 2 46V18Q2 2 18 2Z" fill="#5b4033"/>
+<path d="M20 17H44Q52 17 52 25V39Q52 47 44 47H29L18.5 55.5L20.5 47Q12 47 12 39V25Q12 17 20 17Z" fill="#fff" fill-opacity="0"/>
+<g fill="none" stroke="#fff" stroke-width="3.4" stroke-linejoin="round"><path d="M20 17H44Q52 17 52 25V39Q52 47 44 47H29L18.5 55.5L20.5 47Q12 47 12 39V25Q12 17 20 17Z"/></g>
+<path d="M12 27H52" stroke="#fff" stroke-width="3.4"/>
+<rect x="22" y="11" width="5" height="11" rx="2.5" fill="#fff"/><rect x="37" y="11" width="5" height="11" rx="2.5" fill="#fff"/>
+<path d="M24.5 35.5l5 5 11-11" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>

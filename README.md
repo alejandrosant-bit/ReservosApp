@@ -29,6 +29,17 @@ app y **trabaja sin internet**.
 | ⚙️ **Personalización** | Nombre, logo, color, dirección; **monedas que maneja y tasas de cambio**; métodos de pago (Nequi, Daviplata, Pago móvil, Zelle, Binance…); horario por día, almuerzo y feriados; intervalos, anticipación, horas mínimas para cancelar; servicios (precio, duración, palabras clave para el bot); profesionales (servicios que hacen, comisión); **todos los mensajes del bot editables**; simulador para probar el bot. |
 | 📴 **Sin internet** | Abre sin conexión mostrando lo último sincronizado (el indicador dice “Sin internet · datos de las 3:40 pm”). Todo lo que hagas se guarda en el teléfono y **se sube solo** cuando vuelve la señal. |
 
+### 🌐 Página web y marca
+
+- **Página web de Reservo:** `public/sitio/index.html` → se ve en `https://reservoapp.netlify.app/sitio/`
+  (los botones "Entrar" y "Crear mi cuenta" llevan a la app). Si más adelante compras un dominio
+  (ej. `reservo.app`), esta página puede ser la portada y la app quedar en `app.reservo.app`.
+- **Logotipo e isotipo:** `public/marca/` — SVG (para web e impresión, se ven nítidos a cualquier
+  tamaño) y PNG: isotipo a color y a una tinta, logotipo horizontal (cacao y blanco), vertical y
+  solo la palabra. La palabra está convertida a trazos, así que no depende de tener la fuente instalada.
+- Colores: Cacao #5B4033 · Café #8A6A55 · Caramelo #B9875E · Latte #C9A98E · Crema #F3E7DA · Espuma #FBF6F0.
+  Tipografías: Comfortaa (logo y títulos) y Nunito (textos).
+
 ### 🏪 Sirve para muchos tipos de negocio
 
 Al crear la cuenta se elige el tipo de negocio y Reservo se adapta: cómo se
