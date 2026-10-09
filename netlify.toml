@@ -4,6 +4,14 @@
   functions = "netlify/functions"
   command = "npm test"
 
+[build.environment]
+  NODE_VERSION = "22"
+  # La clave web de Firebase (AIza…) es pública por diseño: va en el
+  # navegador de todos y la protegen las reglas de Firestore. Netlify la
+  # confunde con un secreto y detiene el despliegue, así que se excluye
+  # solo esa clave del escaneo (los demás secretos se siguen revisando).
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIzaSyB8TdEbOe2RFntDB2dZxk8Oq-4iQTcpqlQ"
+
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["firebase-admin"]
