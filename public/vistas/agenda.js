@@ -24,6 +24,7 @@ import {
   citasEnConflicto,
   estiloDe,
   vocabularioDe,
+  ejemplosDe,
 } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales } from "../ui.js";
 import { cobrarCita, deshacerCobro } from "./cobro.js";
@@ -358,7 +359,7 @@ export function formularioCita({ cita = null, fecha: f = hoy(), hora = "", clien
           <div class="horas-grid" id="horas" style="margin-top:6px"></div>
           <input type="time" id="hora-manual" class="oculto" style="margin-top:6px" step="300" />
         </div>
-        <label>Notas de la cita<textarea name="notas" placeholder="Ej. trae su propio tinte">${esc(cita?.notas || "")}</textarea></label>
+        <label>Notas de ${V.la} ${V.cita}<textarea name="notas" placeholder="Ej. ${esc(ejemplosDe(E.config).notaCita)}">${esc(cita?.notas || "")}</textarea></label>
         <p class="error" id="err"></p>
         <button class="btn btn-pri btn-bloque" type="submit">${editando ? "Guardar cambios" : "Agendar " + V.cita}</button>
       </form>`,

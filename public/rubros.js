@@ -171,7 +171,7 @@ export const RUBROS = {
     asistente: "Sofi",
     mensajes: MENSAJES_POR_DEFECTO,
     servicios: [
-      ["Masaje relajante", 60, 90000, "Spa", "masaje, relajacion"],
+      ["Masaje relajante", 60, 90000, "Spa", "masaje, relajación"],
       ["Masaje descontracturante", 60, 110000, "Spa", "masaje, contractura, espalda"],
       ["Limpieza facial", 60, 85000, "Facial", "facial, cara, limpieza"],
       ["Manicure", 45, 25000, "Uñas", "uñas, manos"],
@@ -258,10 +258,10 @@ export const RUBROS = {
     preguntaServicio: "¿Qué tipo de consulta necesitas? Elige una opción 👇",
     recomendacion: "Trae tu documento de identidad y, si tienes, tus exámenes o fórmulas anteriores. Llega 10 minutos antes.",
     servicios: [
-      ["Consulta medicina general", 30, 70000, "Consulta", "medico, general, consulta, cita medica, dolor"],
-      ["Control", 20, 50000, "Consulta", "control, revision, seguimiento"],
+      ["Consulta medicina general", 30, 70000, "Consulta", "médico, general, consulta, cita médica, dolor"],
+      ["Control", 20, 50000, "Consulta", "control, revisión, seguimiento"],
       ["Certificado médico", 15, 40000, "Trámites", "certificado, incapacidad"],
-      ["Lectura de exámenes", 20, 45000, "Consulta", "examenes, resultados, laboratorio"],
+      ["Lectura de exámenes", 20, 45000, "Consulta", "exámenes, resultados, laboratorio"],
       ["Consulta virtual", 30, 60000, "Virtual", "virtual, videollamada, telemedicina"],
     ],
   },
@@ -277,7 +277,7 @@ export const RUBROS = {
     asistente: "Clara",
     recomendacion: "Llega 10 minutos antes y cepíllate antes de la cita 🪥.",
     servicios: [
-      ["Valoración odontológica", 30, 50000, "Valoración", "valoracion, revision, dientes, muela"],
+      ["Valoración odontológica", 30, 50000, "Valoración", "valoración, revisión, dientes, muela"],
       ["Limpieza / profilaxis", 45, 90000, "Higiene", "limpieza, profilaxis, sarro"],
       ["Resina", 45, 120000, "Tratamiento", "resina, caries, calza"],
       ["Blanqueamiento", 60, 350000, "Estética", "blanqueamiento, blanquear"],
@@ -297,7 +297,7 @@ export const RUBROS = {
     recomendacion: "Si tu sesión es virtual, te enviaremos el enlace antes de empezar.",
     servicios: [
       ["Primera sesión / valoración", 60, 120000, "Sesión", "primera, valoracion, inicio"],
-      ["Sesión individual", 50, 100000, "Sesión", "sesion, terapia, psicologo, individual"],
+      ["Sesión individual", 50, 100000, "Sesión", "sesión, terapia, psicólogo, individual"],
       ["Terapia de pareja", 75, 150000, "Sesión", "pareja"],
       ["Sesión virtual", 50, 90000, "Virtual", "virtual, online, videollamada"],
     ],
@@ -430,6 +430,39 @@ export const RUBROS = {
     ],
   },
 };
+
+// Textos de ejemplo de los formularios para cada tipo de negocio:
+// frase = lo que escribiría un cliente; notaCita / notaCliente /
+// venta / gasto = ejemplos de los campos de la app.
+const EJEMPLOS = {
+  spa: { frase: "quiero un masaje para relajarme", notaCita: "Prefiere aceite sin aroma", notaCliente: "alergias, presión del masaje, preferencias…", venta: "Aceite relajante de lavanda", gasto: "Compra de aceites y cremas" },
+  peluqueria: { frase: "quiero pintarme el pelo", notaCita: "Trae su propio tinte", notaCliente: "fórmula de color, tipo de cabello, alergias…", venta: "Shampoo con keratina", gasto: "Compra de tintes" },
+  unas: { frase: "quiero arreglarme las uñas", notaCita: "Quiere diseño de flores", notaCliente: "forma de uña, colores favoritos, alergias…", venta: "Esmalte de regalo", gasto: "Compra de esmaltes y limas" },
+  barberia: { frase: "quiero motilarme y arreglarme la barba", notaCita: "Fade #1 a los lados", notaCliente: "corte de siempre, tipo de barba, piel sensible…", venta: "Cera para cabello", gasto: "Cuchillas y talco" },
+  consultorio: { frase: "necesito una cita con el médico general", notaCita: "Trae exámenes de sangre", notaCliente: "alergias, enfermedades, medicamentos que toma…", venta: "Certificado médico adicional", gasto: "Compra de guantes y tapabocas" },
+  odontologia: { frase: "me duele una muela", notaCita: "Dolor en muela inferior derecha", notaCliente: "alergias, tratamientos anteriores, sensibilidad…", venta: "Kit de cepillo e hilo dental", gasto: "Compra de resinas y anestesia" },
+  psicologia: { frase: "quiero agendar una sesión de terapia", notaCita: "Sesión virtual por videollamada", notaCliente: "motivo de consulta, contacto de emergencia…", venta: "Taller grupal de manejo de ansiedad", gasto: "Arriendo del consultorio" },
+  fisioterapia: { frase: "tengo dolor de espalda", notaCita: "Trae la orden médica", notaCliente: "lesiones, cirugías, zona de dolor…", venta: "Banda elástica de ejercicios", gasto: "Compra de geles y vendajes" },
+  veterinaria: { frase: "mi perro necesita vacuna", notaCita: "Mascota: Luna, gata de 3 años", notaCliente: "nombre y especie de la mascota, vacunas, alergias…", venta: "Bulto de concentrado", gasto: "Compra de vacunas" },
+  gimnasio: { frase: "quiero una clase de yoga", notaCita: "Primera clase, viene con una amiga", notaCliente: "objetivo, lesiones, plan contratado…", venta: "Mensualidad", gasto: "Mantenimiento de máquinas" },
+  tatuajes: { frase: "quiero cotizar un tatuaje", notaCita: "Diseño de rosa en el antebrazo", notaCliente: "diseños anteriores, alergias, zona del cuerpo…", venta: "Crema de cuidado para tatuaje", gasto: "Compra de agujas y tintas" },
+  lavadero: { frase: "quiero lavar el carro", notaCita: "Camioneta gris, placa ABC123", notaCliente: "vehículo, placa, servicios de siempre…", venta: "Ambientador para carro", gasto: "Compra de jabón y cera" },
+  asesorias: { frase: "necesito asesoría para un contrato", notaCita: "Traer contrato de arrendamiento", notaCliente: "tipo de caso, documentos entregados…", venta: "Elaboración de derecho de petición", gasto: "Papelería y notaría" },
+  taxi: { frase: "necesito un taxi para el aeropuerto", notaCita: "Lleva dos maletas grandes", notaCliente: "direcciones frecuentes, preferencias…", venta: "Servicio por horas", gasto: "Tanqueada de gasolina" },
+};
+
+export function ejemplosDe(config) {
+  const r = rubroDe(config);
+  const e = EJEMPLOS[r.id] || EJEMPLOS.spa;
+  const categorias = [...new Set(r.servicios.map((x) => x[3]))].slice(0, 3).join(", ");
+  return {
+    ...e,
+    servicio: (r.servicios[1] || r.servicios[0])[0],
+    categorias: categorias + "…",
+    palabras: (r.servicios[0][4] || "").split(",").slice(0, 3).map((x) => x.trim()).join(", "),
+    servicioPrincipal: r.servicios[0][0],
+  };
+}
 
 export const ORDEN_RUBROS = Object.keys(RUBROS);
 

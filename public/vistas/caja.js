@@ -2,7 +2,7 @@
 // Caja: apertura, ingresos/gastos, cierre con arqueo por moneda
 // ============================================================
 import { E, hoy, ahora, nuevoId, guardar, borrar, cajaAbierta, serverTimestamp } from "../datos.js";
-import { formatoMoneda, aMonedaBase, deMinutos, hora12, fechaCorta, MONEDAS } from "../core.js";
+import { ejemplosDe, formatoMoneda, aMonedaBase, deMinutos, hora12, fechaCorta, MONEDAS } from "../core.js";
 import { esc, abrirModal, confirmar, toast, campoMonto, leerMonto, montoATexto, datosForm } from "../ui.js";
 
 const dec = (m) => MONEDAS[m]?.decimales ?? 2;
@@ -186,7 +186,7 @@ export function movimiento(tipo) {
   abrirModal({
     titulo: tipo === "ingreso" ? "Registrar ingreso" : "Registrar gasto",
     html: `<form id="f-mov">
-      <label>Concepto<input name="concepto" required placeholder="${tipo === "ingreso" ? "Ej. Shampoo keratina" : "Ej. Compra de esmaltes"}" autocomplete="off" /></label>
+      <label>Concepto<input name="concepto" required placeholder="Ej. ${esc(tipo === "ingreso" ? ejemplosDe(E.config).venta : ejemplosDe(E.config).gasto)}" autocomplete="off" /></label>
       <label>Categoría<select name="categoria">${categorias.map((c) => `<option>${esc(c)}</option>`).join("")}</select></label>
       ${
         tipo === "egreso" && E.profesionales.length

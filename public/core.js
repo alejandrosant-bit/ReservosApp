@@ -325,7 +325,7 @@ export function puedeCancelar(cita, config, ahora) {
 // ------------------------------------------------------------
 import { MENSAJES_POR_DEFECTO, MENSAJES_BARBERIA, MENSAJES_TAXI, RUBROS, rubroDe, vocabularioDe } from "./rubros.js";
 export { MENSAJES_POR_DEFECTO, MENSAJES_BARBERIA, MENSAJES_TAXI, RUBROS, rubroDe, vocabularioDe };
-export { ORDEN_RUBROS, VOCES, frasesDe, mensajesGenerales } from "./rubros.js";
+export { ORDEN_RUBROS, VOCES, frasesDe, mensajesGenerales, ejemplosDe } from "./rubros.js";
 
 // Estilos visuales: cambian colores, letras, íconos y celebraciones.
 // El tono del bot y las palabras ("cita", "paciente"...) los da el

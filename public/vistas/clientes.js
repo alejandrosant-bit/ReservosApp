@@ -2,7 +2,7 @@
 // Clientes: base de datos, visitas por mes, historial y notas
 // ============================================================
 import { E, hoy, guardar, borrar, nuevoId, citasDeCliente, serverTimestamp, datosCliente } from "../datos.js";
-import { vocabularioDe, formatoMoneda, fechaCorta, hora12, normalizar, soloDigitos, MESES, sumarDias, inicioMes } from "../core.js";
+import { vocabularioDe, ejemplosDe, formatoMoneda, fechaCorta, hora12, normalizar, soloDigitos, MESES, sumarDias, inicioMes } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, iniciales, descargar, aCSV } from "../ui.js";
 import { formularioCita, linkWhatsapp, ESTADOS } from "./agenda.js";
 
@@ -217,7 +217,7 @@ export function formularioCliente(c = null) {
         <label>Correo<input name="email" type="email" value="${esc(c?.email || "")}" /></label>
         <label>Cumpleaños<input name="cumple" type="date" value="${esc(c?.cumple || "")}" /></label>
       </div>
-      <label>Notas (alergias, preferencias, fórmula de color…)<textarea name="notas">${esc(c?.notas || "")}</textarea></label>
+      <label>Notas (${esc(ejemplosDe(E.config).notaCliente)})<textarea name="notas">${esc(c?.notas || "")}</textarea></label>
       <p class="error" id="err"></p>
       <button class="btn btn-pri btn-bloque">Guardar</button>
     </form>`,

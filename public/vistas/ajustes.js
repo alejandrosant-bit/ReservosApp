@@ -3,7 +3,7 @@
 // servicios, profesionales, bot de WhatsApp y notificaciones.
 // ============================================================
 import { E, alCambiar, guardarConfig, guardar, borrar, nuevoId, sesion, db, doc, setDoc, deleteDoc, escribir, listarColeccion, lote } from "../datos.js";
-import { ESTILOS, estiloDe, RUBROS, ORDEN_RUBROS, rubroDe, vocabularioDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
+import { ESTILOS, estiloDe, RUBROS, ORDEN_RUBROS, rubroDe, vocabularioDe, ejemplosDe, MONEDAS, DIAS, MENSAJES_POR_DEFECTO, HORARIO_POR_DEFECTO, formatoMoneda, fechaCorta } from "../core.js";
 import { esc, abrirModal, confirmar, toast, datosForm, campoMonto, leerMonto, montoATexto, sonar, descargar, aplicarFondo } from "../ui.js";
 import { prepararPush, probarNotificacion, pushDisponible } from "../notificaciones.js";
 import { colorProf } from "./agenda.js";
@@ -445,23 +445,25 @@ function seccionServicios() {
 }
 
 function editarServicio(s = null) {
+  const EJ = ejemplosDe(E.config);
+  const V = vocabularioDe(E.config);
   const base = E.config.monedaPrincipal;
   const dec = MONEDAS[base]?.decimales ?? 2;
   abrirModal({
     titulo: s ? "Editar servicio" : "Nuevo servicio",
     html: `<form id="f">
-      <label>Nombre<input name="nombre" required value="${esc(s?.nombre || "")}" placeholder="Ej. Manicure semipermanente" /></label>
+      <label>Nombre<input name="nombre" required value="${esc(s?.nombre || "")}" placeholder="Ej. ${esc(EJ.servicioPrincipal)}" /></label>
       <div class="dos-col">
         <label>Precio (${base})<input name="precio" value="${montoATexto(s?.precio || 0, dec)}" autocomplete="off" /></label>
         <label>Duración (min)<input type="number" name="duracion" min="5" step="5" value="${s?.duracion || 30}" required /></label>
       </div>
       <div class="dos-col">
-        <label>Categoría<input name="categoria" value="${esc(s?.categoria || "")}" placeholder="Uñas, Cabello, Spa…" /></label>
-        <label>Color<input type="color" name="color" value="${esc(s?.color || "#c2185b")}" /></label>
+        <label>Categoría<input name="categoria" value="${esc(s?.categoria || "")}" placeholder="${esc(EJ.categorias)}" /></label>
+        <label>Color<input type="color" name="color" value="${esc(s?.color || E.config.colorPrimario || "#c2185b")}" /></label>
       </div>
-      <label>Descripción corta (la ve el cliente en WhatsApp)<input name="descripcion" maxlength="60" value="${esc(s?.descripcion || "")}" /></label>
-      <label>Otras palabras con que lo piden<input name="palabrasClave" value="${esc(s?.palabrasClave || "")}" placeholder="Ej. uñas, manos, esmaltado" />
-        <span class="ayuda">Ayuda al bot a entender: si escriben “quiero arreglarme las uñas” sabrá que es este servicio.</span></label>
+      <label>Descripción corta (la ve el ${esc(V.cliente)} en WhatsApp)<input name="descripcion" maxlength="60" value="${esc(s?.descripcion || "")}" /></label>
+      <label>Otras palabras con que lo piden<input name="palabrasClave" value="${esc(s?.palabrasClave || "")}" placeholder="Ej. ${esc(EJ.palabras)}" />
+        <span class="ayuda">Ayuda al bot a entender: si escriben “${esc(EJ.frase)}” sabrá que es este servicio.</span></label>
       <div class="dos-col">
         <label>Orden en la lista<input type="number" name="orden" value="${s?.orden ?? ""}" placeholder="1, 2, 3…" /></label>
         <label class="check" style="margin-top:22px"><input type="checkbox" name="activo" ${s?.activo === false ? "" : "checked"} /> Visible para agendar</label>
@@ -741,7 +743,7 @@ function seccionNotificaciones() {
   abrirModal({
     titulo: "Notificaciones",
     html: `<p>Cuando alguien agende o cancele por WhatsApp sonará un aviso y te llegará una notificación como esta:</p>
-      <div class="tarjeta" style="box-shadow:none;border:1px solid var(--borde)"><b>🔔 Nuevo cliente para 3:00 pm</b><div class="peq suave">Manicure · María Pérez · hoy</div></div>
+      <div class="tarjeta" style="box-shadow:none;border:1px solid var(--borde)"><b>🔔 Nuevo ${esc(vocabularioDe(E.config).cliente)} para 3:00 pm</b><div class="peq suave">${esc(ejemplosDe(E.config).servicioPrincipal)} · María Pérez · hoy</div></div>
       <p class="peq">Estado en este dispositivo: <b>${permiso === "granted" ? "✅ Activadas" : permiso === "denied" ? "⛔ Bloqueadas (actívalas en los ajustes del navegador)" : permiso === "no-disponible" ? "No disponible en este navegador" : "Sin activar"}</b></p>
       ${esIOS && !instalada ? '<p class="tarjeta" style="background:var(--alerta-suave);box-shadow:none">📱 En iPhone primero toca <b>Compartir → Agregar a pantalla de inicio</b>, abre la app desde ese ícono y luego activa las notificaciones.</p>' : ""}
       <div class="fila-botones" style="flex-direction:column">

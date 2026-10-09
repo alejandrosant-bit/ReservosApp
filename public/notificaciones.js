@@ -2,6 +2,7 @@
 // Registra este teléfono/computador para recibir "🔔 Nuevo cliente
 // para 3:00 pm" aunque la app esté cerrada.
 import { app, E, guardar } from "./datos.js";
+import { ejemplosDe, vocabularioDe } from "./core.js";
 import { vapidKey } from "./firebase-config.js";
 import { toast } from "./ui.js";
 
@@ -52,8 +53,8 @@ export async function prepararPush({ silencioso = false } = {}) {
 
 export async function probarNotificacion() {
   const reg = await navigator.serviceWorker.ready;
-  await reg.showNotification("🔔 Nuevo cliente para 3:00 pm", {
-    body: `Manicure · María Pérez · hoy`,
+  await reg.showNotification(`🔔 Nuevo ${vocabularioDe(E.config).cliente} para 3:00 pm`, {
+    body: `${ejemplosDe(E.config).servicioPrincipal} · María Pérez · hoy`,
     icon: E.config.logo || "./icon-192.png",
     badge: "./icon-192.png",
     vibrate: [200, 100, 200],
