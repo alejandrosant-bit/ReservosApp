@@ -24,6 +24,15 @@ function mostrar(id) {
 // Service worker (abre sin internet + notificaciones push)
 // ------------------------------------------------------------
 if ("serviceWorker" in navigator) {
+  // Si ya había una versión instalada y llega otra, se recarga una
+  // sola vez para que nadie se quede viendo la versión vieja.
+  const habiaVersion = Boolean(navigator.serviceWorker.controller);
+  let recargado = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!habiaVersion || recargado) return;
+    recargado = true;
+    location.reload();
+  });
   navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("SW:", e));
   navigator.serviceWorker.addEventListener("message", (e) => {
     if (e.data?.tipo === "abrir" && e.data.url) location.hash = e.data.url.split("#")[1] || "agenda";

@@ -7,7 +7,7 @@
 //    3:00 pm") aunque la app esté cerrada.
 // Al cambiar cualquier archivo, sube el número de VERSION.
 // ============================================================
-const VERSION = "reservo-v15";
+const VERSION = "reservo-v16";
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 const ARCHIVOS = [
   "./",
@@ -90,21 +90,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Archivos propios: copia guardada al instante y se actualiza en
-  // segundo plano (stale-while-revalidate). SDK de Firebase: caché.
+  // SDK de Firebase: no cambia nunca (versión fija), sale de la caché.
+  if (url.href.startsWith(SDK)) {
+    event.respondWith(
+      caches.match(req).then(
+        (guardado) =>
+          guardado ||
+          fetch(req).then((r) => {
+            if (r && r.ok) {
+              const copia = r.clone();
+              caches.open(VERSION).then((c) => c.put(req, copia));
+            }
+            return r;
+          })
+      )
+    );
+    return;
+  }
+
+  // Archivos propios: red primero, para que una actualización se vea
+  // en la primera apertura (antes se mostraba la copia vieja y había
+  // que recargar dos veces). Sin internet, la copia guardada.
   event.respondWith(
-    caches.match(req).then((guardado) => {
-      const deRed = fetch(req)
-        .then((r) => {
-          if (r && r.ok && (url.origin === location.origin || url.href.startsWith(SDK))) {
-            const copia = r.clone();
-            caches.open(VERSION).then((c) => c.put(req, copia));
-          }
-          return r;
-        })
-        .catch(() => guardado);
-      return guardado || deRed;
-    })
+    fetch(req, url.origin === location.origin ? { cache: "no-cache" } : undefined)
+      .then((r) => {
+        if (r && r.ok && url.origin === location.origin) {
+          const copia = r.clone();
+          caches.open(VERSION).then((c) => c.put(req, copia));
+        }
+        return r;
+      })
+      .catch(() => caches.match(req).then((guardado) => guardado || Response.error()))
   );
 });
 
