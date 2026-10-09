@@ -28,7 +28,7 @@ deben mezclar.
 ## Cómo está hecho
 - **Sin compilación**: JavaScript moderno (módulos ES) en `public/`. Firebase 10.14.1 desde el CDN de gstatic.
 - **Funciona sin internet**: Firestore con caché persistente + service worker (`public/sw.js`).
-  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v23`)
+  **Regla:** cada vez que cambie algo en `public/`, subir `VERSION` en `sw.js` (va en `reservo-v24`)
   y agregar archivos nuevos a la lista `ARCHIVOS`.
 - **Servidor**: Netlify Functions en `netlify/functions/` (usan `firebase-admin`):
   - `whatsapp.mjs` → `/api/whatsapp`: webhook de WhatsApp Cloud API (Meta), firma HMAC.

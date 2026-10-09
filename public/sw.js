@@ -7,7 +7,7 @@
 //    3:00 pm") aunque la app esté cerrada.
 // Al cambiar cualquier archivo, sube el número de VERSION.
 // ============================================================
-const VERSION = "reservo-v23";
+const VERSION = "reservo-v24";
 const SDK = "https://www.gstatic.com/firebasejs/10.14.1";
 const ARCHIVOS = [
   "./",
@@ -83,8 +83,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((r) => {
-          const copia = r.clone();
-          caches.open(VERSION).then((c) => c.put("./index.html", copia));
+          // Solo la app (la raíz) se guarda como copia sin internet; la
+          // página de ventas y la de privacidad no deben reemplazarla.
+          if (r.ok && (url.pathname === "/" || url.pathname === "/index.html")) {
+            const copia = r.clone();
+            caches.open(VERSION).then((c) => c.put("./index.html", copia));
+          }
           return r;
         })
         .catch(() => caches.match("./index.html").then((r) => r || caches.match("./")))
